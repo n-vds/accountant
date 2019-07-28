@@ -3,6 +3,7 @@ package com.accountant.accountant;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import com.accountant.accountant.db.Database;
 
@@ -30,8 +31,9 @@ public class MainActivity extends AppCompatActivity {
     void switchToData() {
         getSupportFragmentManager()
                 .beginTransaction()
-                .addToBackStack(null)
                 .replace(R.id.content, new DataListFragment())
+                .addToBackStack(null)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit();
     }
 

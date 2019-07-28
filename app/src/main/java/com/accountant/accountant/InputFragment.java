@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -57,6 +58,11 @@ public class InputFragment extends Fragment {
 
     private void onGoClick() {
         MainActivity activity = (MainActivity) getActivity();
+
+        if (inputAmount == 0) {
+            Toast.makeText(getActivity(), "You didn't specify an amount!", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         activity.getDatabase().insert(inputAmount * 100);
         inputAmount = 0;
