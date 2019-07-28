@@ -1,20 +1,11 @@
 package com.accountant.accountant;
 
-import android.app.PendingIntent;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteCursorDriver;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQuery;
-import android.hardware.SensorManager;
-import android.location.Criteria;
-import android.location.LocationManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+import com.accountant.accountant.db.Database;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +20,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText vInput;
     private Button[] inputButtons;
     private Button buttonDot, buttonGo;
+
+    private Database db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,15 +39,11 @@ public class MainActivity extends AppCompatActivity {
         vInput = findViewById(R.id.editText);
         vInput.setShowSoftInputOnFocus(false);
 
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestSingleUpdate(Criteria.ACCURACY_MEDIUM, new PendingIntent());
-
         inputString = "";
+
+        db = new Database(this);
     }
 
-    private void getLocation() {
-        getSystemService()
-    }
 
     private void onClick(View which) {
         for (int i = 0; i < R_BUTTONS.length; i++) {
@@ -67,9 +56,15 @@ public class MainActivity extends AppCompatActivity {
             inputString = inputString.replaceFirst("\\.", "");
             inputString += ".";
         } else if (which == buttonGo) {
-            //TOOD
+            //TODO
         }
 
         vInput.setText(inputString);
+    }
+
+    @Override
+    protected void onDestroy() {
+        db.close();
+        super.onDestroy();
     }
 }
