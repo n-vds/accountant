@@ -23,6 +23,18 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
+    Database getDatabase() {
+        return db;
+    }
+
+    void switchToData() {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .addToBackStack(null)
+                .replace(R.id.content, new DataListFragment())
+                .commit();
+    }
+
     @Override
     protected void onDestroy() {
         db.close();

@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -57,10 +56,12 @@ public class InputFragment extends Fragment {
     }
 
     private void onGoClick() {
-        // TODO  db.insert(inputAmount * 100);
+        MainActivity activity = (MainActivity) getActivity();
+
+        activity.getDatabase().insert(inputAmount * 100);
         inputAmount = 0;
         handleAmountChange();
-        Toast.makeText(this.getContext(), "Inserted amount", Toast.LENGTH_SHORT).show();
+        activity.switchToData();
     }
 
     private void onDelClick() {

@@ -2,11 +2,8 @@ package com.accountant.accountant.db;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.Date;
 
 public class Database {
     private DbHelper helper;
@@ -37,6 +34,21 @@ public class Database {
 
     public float calcSpendLast30Days() {
         return 0;
+    }
+
+    public Cursor getData() {
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        String[] columns = new String[]{
+                SpendingEntry.COLUMN_ID + " AS _id",
+                SpendingEntry.COLUMN_AMOUNT, SpendingEntry.COLUMN_DATE
+        };
+
+        return db.query(SpendingEntry.TABLE_NAME, columns,
+                null, null, // selection
+                null, // group by
+                null, // having
+                SpendingEntry.COLUMN_DATE + " DESC");
     }
 
     public void close() {
