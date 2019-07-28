@@ -7,13 +7,13 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-    <EditText
+    <TextView
             android:layout_width="wrap_content"
             android:layout_height="0dp"
-            android:inputType="text"
             android:text="0 €"
             android:textSize="90sp"
-            android:id="@+id/editText"
+            android:id="@+id/viewAmount"
+            android:textColor="@android:color/black"
             android:layout_marginTop="32dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
@@ -128,16 +128,27 @@
             android:layout_height="65dp"
             android:id="@+id/buttonDot"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/buttonGo" app:layout_constraintStart_toEndOf="@+id/button0"
+            app:layout_constraintEnd_toStartOf="@+id/buttonDel" app:layout_constraintStart_toEndOf="@+id/button0"
             app:layout_constraintHorizontal_bias="0.5" android:textSize="30sp"/>
 
     <Button
-            android:text="=>"
+            android:text="⌫"
+            android:layout_width="wrap_content"
+            android:layout_height="65dp"
+            android:id="@+id/buttonDel"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/buttonDot"
+            app:layout_constraintEnd_toStartOf="@id/buttonGo"/>
+
+    <Button
+            android:text="⏎"
             android:layout_width="0dp"
             android:layout_height="65dp"
             android:id="@+id/buttonGo"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/buttonDot"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toEndOf="@+id/buttonDel"
             app:layout_constraintHorizontal_bias="0.5" android:textSize="30sp"/>
+
 
 </android.support.constraint.ConstraintLayout>
