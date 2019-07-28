@@ -36,7 +36,7 @@ public class Database {
         return 0;
     }
 
-    public Cursor getData() {
+    public Cursor queryData() {
         SQLiteDatabase db = helper.getReadableDatabase();
 
         String[] columns = new String[]{
