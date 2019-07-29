@@ -40,6 +40,10 @@ public class InputFragment extends Fragment {
         buttonGo.setOnClickListener(_v -> onGoClick());
         buttonDel = root.findViewById(R.id.buttonDel);
         buttonDel.setOnClickListener(_v -> onDelClick());
+        buttonDel.setOnLongClickListener(_v -> {
+            onDelLongClick();
+            return true;
+        });
         vInput = root.findViewById(R.id.viewAmount);
 
         inputAmount = 0;
@@ -72,6 +76,11 @@ public class InputFragment extends Fragment {
 
     private void onDelClick() {
         inputAmount = inputAmount / 10;
+        handleAmountChange();
+    }
+
+    private void onDelLongClick() {
+        inputAmount = 0;
         handleAmountChange();
     }
 
