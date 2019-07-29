@@ -2,13 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
             android:id="@+id/action_home"
-            android:title="Home"/>
+            android:title="Home"
+            android:icon="@drawable/ic_baseline_home"/>
 
     <item
             android:id="@+id/action_insert"
+            android:icon="@drawable/ic_baseline_add"
             android:title="Insert"/>
 
     <item
             android:id="@+id/action_show_list"
+            android:icon="@drawable/ic_baseline_list"
             android:title="Show All"/>
 </menu>
