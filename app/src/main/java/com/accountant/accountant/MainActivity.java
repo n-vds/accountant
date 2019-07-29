@@ -3,6 +3,7 @@ package com.accountant.accountant;
 
 import android.os.Bundle;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
@@ -11,6 +12,7 @@ import com.accountant.accountant.db.Database;
 public class MainActivity extends AppCompatActivity {
     private Database db;
 
+    private FragmentManager fragmentManager;
     private BottomNavigationView navbar;
 
     @Override
@@ -23,11 +25,8 @@ public class MainActivity extends AppCompatActivity {
         navbar = findViewById(R.id.navigation);
         navbar.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
 
+        fragmentManager = getSupportFragmentManager();
         navbar.setSelectedItemId(R.id.action_insert);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.content, new InputFragment())
-                .commit();
     }
 
     Database getDatabase() {
@@ -39,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchDirectlyToData() {
-        getSupportFragmentManager()
+        fragmentManager
                 .beginTransaction()
                 .replace(R.id.content, new DataListFragment())
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -47,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchDirectlyToInsert() {
-        getSupportFragmentManager()
+        fragmentManager
                 .beginTransaction()
                 .replace(R.id.content, new InputFragment())
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -55,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean onNavigationItemSelected(MenuItem item) {
+        if (item.getItemId() == navbar.getSelectedItemId()) {
+            // FIXME this only works as long as theres no deeper navigation
+            return false;
+        }
+
         switch (item.getItemId()) {
             case R.id.action_home:
                 break;
