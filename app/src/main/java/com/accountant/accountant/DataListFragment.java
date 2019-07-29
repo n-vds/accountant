@@ -33,9 +33,9 @@ public class DataListFragment extends ListFragment {
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 R.layout.data_list_row,
-                db.queryData(),
-                new String[]{SpendingEntry.COLUMN_DATE, SpendingEntry.COLUMN_AMOUNT},
-                new int[]{R.id.date, R.id.amount}, 0);
+                db.queryDataForUserView(),
+                new String[]{SpendingEntry.COLUMN_DATE, SpendingEntry.COLUMN_AMOUNT, Database.COLUMN_TAG_LIST},
+                new int[]{R.id.date, R.id.amount, R.id.listTags}, 0);
 
         adapter.setViewBinder((view, cursor, columnIndex) -> {
             TextView v = (TextView) view;
@@ -45,6 +45,9 @@ public class DataListFragment extends ListFragment {
                 v.setText(DATE_FORMAT.format(new Date(date)));
             } else if (columnIndex == cursor.getColumnIndex(SpendingEntry.COLUMN_AMOUNT)) {
                 v.setText((cursor.getInt(columnIndex) / 100) + " €");
+            } else if (columnIndex == cursor.getColumnIndex(Database.COLUMN_TAG_LIST)) {
+                String tags = cursor.getString(columnIndex);
+                v.setText(tags == null || tags.isEmpty() ? "No tags" : tags);
             } else {
                 return false;
             }

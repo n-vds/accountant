@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 public class Database {
+    public static final String COLUMN_TAG_LIST = "tag_list";
+
     private DbHelper helper;
 
     public Database(Context ctx) {
@@ -17,15 +19,41 @@ public class Database {
      *
      * @param spending the amount spent
      */
-    public void insert(int spending) {
+    public void insert(int spending, int... tags) {
         SQLiteDatabase db = helper.getWritableDatabase();
 
         long now = System.currentTimeMillis();
 
-        ContentValues values = new ContentValues(1);
-        values.put(SpendingEntry.COLUMN_AMOUNT, spending);
-        values.put(SpendingEntry.COLUMN_DATE, now);
-        db.insert(SpendingEntry.TABLE_NAME, null, values);
+        db.beginTransaction();
+        try {
+            ContentValues values = new ContentValues(1);
+            values.put(SpendingEntry.COLUMN_AMOUNT, spending);
+            values.put(SpendingEntry.COLUMN_DATE, now);
+            long rowId = db.insert(SpendingEntry.TABLE_NAME, null, values);
+
+            if (tags != null && tags.length > 0) {
+                StringBuilder tagValuesString = new StringBuilder();
+
+                for (int i = 0; i < tags.length; i++) {
+                    if (i != 0) {
+                        tagValuesString.append(' ').append(',');
+                    }
+                    tagValuesString.append('(');
+                    tagValuesString.append(rowId);
+                    tagValuesString.append(',').append(' ');
+                    tagValuesString.append(tags[i]);
+                    tagValuesString.append(')');
+                }
+
+                db.execSQL("INSERT INTO " + TagSpendingEntry.TABLE_NAME + " (" +
+                        TagSpendingEntry.COLUMN_SPENDING + ", " +
+                        TagSpendingEntry.COLUMN_TAG + ") " +
+                        "VALUES " + tagValuesString);
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     public float calcSpendThisMonth() {
@@ -36,19 +64,25 @@ public class Database {
         return 0;
     }
 
-    public Cursor queryData() {
+    public Cursor queryDataForUserView() {
         SQLiteDatabase db = helper.getReadableDatabase();
 
-        String[] columns = new String[]{
-                SpendingEntry.COLUMN_ID + " AS _id",
-                SpendingEntry.COLUMN_AMOUNT, SpendingEntry.COLUMN_DATE
-        };
+        String sql = "SELECT " +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID + " AS _id," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_AMOUNT + "," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + "," +
+                "group_concat(" + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_NAME + ", ', ') AS " + Database.COLUMN_TAG_LIST +
+                " FROM " + SpendingEntry.TABLE_NAME +
+                " LEFT JOIN " + TagSpendingEntry.TABLE_NAME +
+                " ON " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID +
+                " = " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_SPENDING +
+                " LEFT JOIN " + TagEntry.TABLE_NAME +
+                " ON " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
+                " GROUP BY " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID +
+                " ORDER BY " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + " DESC";
 
-        return db.query(SpendingEntry.TABLE_NAME, columns,
-                null, null, // selection
-                null, // group by
-                null, // having
-                SpendingEntry.COLUMN_DATE + " DESC");
+        return db.rawQuery(sql, null);
     }
 
     public void close() {

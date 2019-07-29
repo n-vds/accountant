@@ -22,7 +22,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         db.execSQL("CREATE TABLE " + TagEntry.TABLE_NAME + "(" +
                 TagEntry.COLUMN_ID + " INTEGER PRIMARY KEY, " +
-                TagEntry.TABLE_NAME + " TEXT NOT NULL)");
+                TagEntry.COLUMN_NAME + " TEXT NOT NULL)");
 
         db.execSQL("CREATE TABLE " + LocationEntry.TABLE_NAME + "(" +
                 LocationEntry.COLUMN_ID + " INTEGER PRIMARY KEY, " +
