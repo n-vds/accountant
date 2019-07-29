@@ -56,14 +56,6 @@ public class Database {
         }
     }
 
-    public float calcSpendThisMonth() {
-        return 0;
-    }
-
-    public float calcSpendLast30Days() {
-        return 0;
-    }
-
     public Cursor queryDataForUserView() {
         SQLiteDatabase db = helper.getReadableDatabase();
 
@@ -83,6 +75,45 @@ public class Database {
                 " ORDER BY " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + " DESC";
 
         return db.rawQuery(sql, null);
+    }
+
+    public SpendingEntity querySingle(long id) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        // TODO refactor, very similar to queryDataForUserView
+        String sql = "SELECT " +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID + " AS _id," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_AMOUNT + "," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + "," +
+                TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID + " AS tag_id," +
+                TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_NAME + " AS tag_name" +
+                " FROM " + SpendingEntry.TABLE_NAME +
+                " LEFT JOIN " + TagSpendingEntry.TABLE_NAME +
+                " ON " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID +
+                " = " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_SPENDING +
+                " LEFT JOIN " + TagEntry.TABLE_NAME +
+                " ON " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
+                " WHERE " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID + " = " + id +
+                " ORDER BY " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + " DESC, " +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID;
+
+        Cursor cursor = db.rawQuery(sql, null);
+        if (cursor.getCount() == 0) {
+            return null;
+        }
+        cursor.moveToFirst();
+        long timestamp = cursor.getLong(cursor.getColumnIndex(SpendingEntry.COLUMN_DATE));
+        int amount = cursor.getInt(cursor.getColumnIndex(SpendingEntry.COLUMN_AMOUNT));
+        long[] tagIds = new long[cursor.getCount()];
+        String[] tagNames = new String[cursor.getCount()];
+        for (int i = 0; i < tagIds.length; i++) {
+            tagIds[i] = cursor.getLong(cursor.getColumnIndex("tag_id"));
+            tagNames[i] =  cursor.getString(cursor.getColumnIndex("tag_name"));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return new SpendingEntity(id, timestamp, amount, tagIds, tagNames);
     }
 
     public void close() {

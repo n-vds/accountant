@@ -6,6 +6,7 @@ import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import com.accountant.accountant.db.Database;
@@ -47,7 +48,11 @@ public class DataListFragment extends ListFragment {
                 v.setText((cursor.getInt(columnIndex) / 100) + " €");
             } else if (columnIndex == cursor.getColumnIndex(Database.COLUMN_TAG_LIST)) {
                 String tags = cursor.getString(columnIndex);
-                v.setText(tags == null || tags.isEmpty() ? "No tags" : tags);
+                if (tags == null || tags.isEmpty()) {
+                    v.setText("Click to add tags");
+                } else {
+                    v.setText(tags);
+                }
             } else {
                 return false;
             }
@@ -56,5 +61,14 @@ public class DataListFragment extends ListFragment {
         });
 
         setListAdapter(adapter);
+    }
+
+    @Override
+    public void onListItemClick(ListView list, View v, int position, long id) {
+        EditDataDialog dialog = new EditDataDialog();
+        Bundle args = new Bundle();
+        args.putLong("id", id);
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "editdatadialog");
     }
 }
