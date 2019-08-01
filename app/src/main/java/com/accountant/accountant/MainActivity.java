@@ -13,6 +13,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
 import android.view.MenuItem;
 import com.accountant.accountant.db.Database;
 
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         db = new Database(this);
 
         setContentView(R.layout.activity_main);
+        setSupportActionBar(findViewById(R.id.toolbar));
 
         navbar = findViewById(R.id.navigation);
         navbar.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
@@ -40,6 +42,21 @@ public class MainActivity extends AppCompatActivity {
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationProvider = new LocationProvider(this, locationManager);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.actionbar_items, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.manageTags) {
+            switchToManageTags();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     Database getDatabase() {
@@ -68,6 +85,17 @@ public class MainActivity extends AppCompatActivity {
                 locationProvider.retryPermissionGranted();
             }
         }
+    }
+
+    void switchToManageTags() {
+        // TODO: this does not uncheck the navbar, leading to a bug:
+        // TODO: if the user clicks on the checked item, this fragment is not closed
+        fragmentManager
+                .beginTransaction()
+                .addToBackStack(null)
+                .replace(R.id.content, new TagManagementFragment())
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .commit();
     }
 
     void switchToData() {

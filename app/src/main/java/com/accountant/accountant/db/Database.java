@@ -117,6 +117,15 @@ public class Database {
         return new SpendingEntity(id, timestamp, amount, tagIds, tagNames);
     }
 
+
+    public Cursor queryAllTagNames() {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        return db.rawQuery("SELECT " + TagEntry.COLUMN_NAME + ", " +
+                TagEntry.COLUMN_ID + " AS _id" +
+                " FROM " + TagEntry.TABLE_NAME +
+                " ORDER BY " + TagEntry.COLUMN_ID, null);
+    }
+
     public void updateEntry(long id, long date, int amount, long[] tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
