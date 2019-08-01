@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
+import java.util.Collection;
+
 public class Database {
     public static final String COLUMN_TAG_LIST = "tag_list";
 
@@ -80,48 +82,56 @@ public class Database {
 
     public SpendingEntity querySingle(long id) {
         SQLiteDatabase db = helper.getReadableDatabase();
+        db.beginTransaction();
 
         // TODO refactor, very similar to queryDataForUserView
-        String sql = "SELECT " +
-                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID + " AS _id," +
-                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_AMOUNT + "," +
-                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + "," +
-                TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID + " AS tag_id," +
-                TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_NAME + " AS tag_name" +
-                " FROM " + SpendingEntry.TABLE_NAME +
-                " LEFT JOIN " + TagSpendingEntry.TABLE_NAME +
-                " ON " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID +
-                " = " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_SPENDING +
-                " LEFT JOIN " + TagEntry.TABLE_NAME +
-                " ON " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_TAG +
-                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
-                " WHERE " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID + " = " + id +
-                " ORDER BY " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + " DESC, " +
-                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID;
+        try {
+            String sql = "SELECT " + SpendingEntry.COLUMN_AMOUNT + ", " + SpendingEntry.COLUMN_DATE +
+                    " FROM " + SpendingEntry.TABLE_NAME +
+                    " WHERE " + SpendingEntry.COLUMN_ID + " = ?";
 
-        Cursor cursor = db.rawQuery(sql, null);
-        if (cursor.getCount() == 0) {
-            return null;
+            Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(id)});
+            if (cursor.getCount() == 0) {
+                return null;
+            }
+            cursor.moveToFirst();
+            long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(SpendingEntry.COLUMN_DATE));
+            int amount = cursor.getInt(cursor.getColumnIndexOrThrow(SpendingEntry.COLUMN_AMOUNT));
+            cursor.close();
+
+            String sqlTags = "SELECT " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID + " AS tag_id, " +
+                    TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_NAME + " AS tag_name" +
+                    " FROM " + TagSpendingEntry.TABLE_NAME +
+                    " LEFT JOIN " + TagEntry.TABLE_NAME +
+                    " ON " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_TAG +
+                    " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
+                    " WHERE " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_SPENDING +
+                    " = ?";
+
+            cursor = db.rawQuery(sqlTags, new String[]{String.valueOf(id)});
+            cursor.moveToFirst();
+
+            long[] tagIds = new long[cursor.getCount()];
+            String[] tagNames = new String[cursor.getCount()];
+            for (int i = 0; i < tagIds.length; i++) {
+                tagIds[i] = cursor.getLong(cursor.getColumnIndexOrThrow("tag_id"));
+                tagNames[i] = cursor.getString(cursor.getColumnIndexOrThrow("tag_name"));
+                cursor.moveToNext();
+            }
+            cursor.close();
+            return new SpendingEntity(id, timestamp, amount, tagIds, tagNames);
+        } finally {
+            db.setTransactionSuccessful();
+            db.endTransaction();
         }
-        cursor.moveToFirst();
-        long timestamp = cursor.getLong(cursor.getColumnIndex(SpendingEntry.COLUMN_DATE));
-        int amount = cursor.getInt(cursor.getColumnIndex(SpendingEntry.COLUMN_AMOUNT));
-        long[] tagIds = new long[cursor.getCount()];
-        String[] tagNames = new String[cursor.getCount()];
-        for (int i = 0; i < tagIds.length; i++) {
-            tagIds[i] = cursor.getLong(cursor.getColumnIndex("tag_id"));
-            tagNames[i] = cursor.getString(cursor.getColumnIndex("tag_name"));
-            cursor.moveToNext();
-        }
-        cursor.close();
-        return new SpendingEntity(id, timestamp, amount, tagIds, tagNames);
     }
 
 
     public Cursor queryAllTagNames() {
         SQLiteDatabase db = helper.getReadableDatabase();
         return db.rawQuery("SELECT " + TagEntry.COLUMN_NAME + ", " +
-                TagEntry.COLUMN_ID + " AS _id" +
+                TagEntry.COLUMN_ID + " AS _id, " +
+                TagEntry.COLUMN_ID +
                 " FROM " + TagEntry.TABLE_NAME +
                 " ORDER BY " + TagEntry.COLUMN_ID, null);
     }
@@ -134,7 +144,7 @@ public class Database {
         return stmt.executeInsert();
     }
 
-    public void updateEntry(long id, long date, int amount, long[] tagIds) {
+    public void updateEntry(long id, long date, int amount, Collection<Long> tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
         try {
