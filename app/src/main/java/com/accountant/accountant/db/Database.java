@@ -126,6 +126,14 @@ public class Database {
                 " ORDER BY " + TagEntry.COLUMN_ID, null);
     }
 
+    public long insertTag(String tagName) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        SQLiteStatement stmt = db.compileStatement("INSERT INTO " + TagEntry.TABLE_NAME +
+                " (" + TagEntry.COLUMN_NAME + ") VALUES (?)");
+        stmt.bindString(1, tagName);
+        return stmt.executeInsert();
+    }
+
     public void updateEntry(long id, long date, int amount, long[] tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
