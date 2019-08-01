@@ -1,14 +1,13 @@
 package com.accountant.accountant;
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
+import android.widget.*;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntry;
 
@@ -69,6 +68,14 @@ public class DataListFragment extends ListFragment {
         Bundle args = new Bundle();
         args.putLong("id", id);
         dialog.setArguments(args);
+        dialog.setTargetFragment(this, 0);
         dialog.show(getFragmentManager(), "editdatadialog");
+    }
+
+    void notifyDataChanged() {
+        CursorAdapter adapter = (CursorAdapter) getListAdapter();
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        adapter.changeCursor(db.queryDataForUserView());
+        ((BaseAdapter) getListAdapter()).notifyDataSetChanged();
     }
 }

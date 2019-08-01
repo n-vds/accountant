@@ -4,6 +4,15 @@
                                              android:layout_height="match_parent"
                                              xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <TextView
+            android:text="Edit"
+            android:textSize="35sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/title"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginTop="10dp"/>
+
     <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -11,7 +20,7 @@
             android:ems="10"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title"
             android:id="@+id/date"/>
 
     <EditText
@@ -31,7 +40,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/amount"
-            android:text="Name"
             android:ems="10"
             android:id="@+id/listTags"/>
 </android.support.constraint.ConstraintLayout>

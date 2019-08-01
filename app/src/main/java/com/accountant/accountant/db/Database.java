@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 
 public class Database {
     public static final String COLUMN_TAG_LIST = "tag_list";
@@ -109,11 +110,41 @@ public class Database {
         String[] tagNames = new String[cursor.getCount()];
         for (int i = 0; i < tagIds.length; i++) {
             tagIds[i] = cursor.getLong(cursor.getColumnIndex("tag_id"));
-            tagNames[i] =  cursor.getString(cursor.getColumnIndex("tag_name"));
+            tagNames[i] = cursor.getString(cursor.getColumnIndex("tag_name"));
             cursor.moveToNext();
         }
         cursor.close();
         return new SpendingEntity(id, timestamp, amount, tagIds, tagNames);
+    }
+
+    public void updateEntry(long id, long date, int amount, long[] tagIds) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            String sqlSpending = "UPDATE " + SpendingEntry.TABLE_NAME +
+                    " SET " + SpendingEntry.COLUMN_DATE + " = ?, " +
+                    SpendingEntry.COLUMN_AMOUNT + " = ? " +
+                    " WHERE " + SpendingEntry.COLUMN_ID + " = ?";
+            db.execSQL(sqlSpending, new Object[]{date, amount, id});
+
+            String sqlDeleteOldTags = "DELETE FROM " + TagSpendingEntry.TABLE_NAME +
+                    " WHERE " + TagSpendingEntry.COLUMN_SPENDING + " = ?";
+            db.execSQL(sqlDeleteOldTags, new Object[]{id});
+
+            SQLiteStatement sqlInsertTag = db.compileStatement("INSERT INTO " + TagSpendingEntry.TABLE_NAME +
+                    " (" + TagSpendingEntry.COLUMN_SPENDING + ", " + TagSpendingEntry.COLUMN_TAG + ")" +
+                    " VALUES (?, ?)");
+
+            for (long tagId : tagIds) {
+                // Index is 1 based
+                sqlInsertTag.bindLong(1, id);
+                sqlInsertTag.bindLong(2, tagId);
+                sqlInsertTag.execute();
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     public void close() {
