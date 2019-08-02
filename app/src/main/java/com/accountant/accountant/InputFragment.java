@@ -20,9 +20,23 @@ public class InputFragment extends Fragment {
     };
 
     private TextView vInput;
+    private TextView locationMessage;
     private int inputAmount;
     private Button[] inputButtons;
     private Button buttonDot, buttonGo, buttonDel;
+
+    private LocationProvider locationProvider;
+    private LocationProvider.LocationProviderUpdate locationListener;
+
+    public InputFragment() {
+        locationListener = (status, lat, lon) -> onLocationUpdate(status, lat, lon);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        this.locationProvider = ((MainActivity) getActivity()).getLocationProvider();
+    }
 
     @Nullable
     @Override
@@ -45,10 +59,46 @@ public class InputFragment extends Fragment {
             return true;
         });
         vInput = root.findViewById(R.id.viewAmount);
+        locationMessage = root.findViewById(R.id.locationMessage);
+        locationMessage.setOnClickListener(_v -> onLocationMessageClicked());
 
         inputAmount = 0;
 
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        locationProvider.startRequest(locationListener);
+    }
+
+    @Override
+    public void onPause() {
+        locationProvider.stopRequest();
+        super.onPause();
+    }
+
+    private void onLocationMessageClicked() {
+        ((MainActivity) getActivity()).requestLocationPermission();
+    }
+
+    private void onLocationUpdate(LocationProvider.Status status, double lat, double lon) {
+        switch (status) {
+            case INACTIVE:
+                locationMessage.setText("...");
+                break;
+            case NO_PERMISSION:
+                locationMessage.setText("Permission for location denied. Click to retry");
+                break;
+            case WAITING:
+                locationMessage.setText("Waiting for location update...");
+                break;
+            case GOT_DATA:
+                locationMessage.setText("" + lat + ", " + lon);
+                locationProvider.stopRequest();
+                break;
+        }
     }
 
     private void onClick(View which) {

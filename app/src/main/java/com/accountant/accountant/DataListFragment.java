@@ -6,8 +6,7 @@ import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
+import android.widget.*;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntry;
 
@@ -33,9 +32,9 @@ public class DataListFragment extends ListFragment {
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 R.layout.data_list_row,
-                db.queryData(),
-                new String[]{SpendingEntry.COLUMN_DATE, SpendingEntry.COLUMN_AMOUNT},
-                new int[]{R.id.date, R.id.amount}, 0);
+                db.queryDataForUserView(),
+                new String[]{SpendingEntry.COLUMN_DATE, SpendingEntry.COLUMN_AMOUNT, Database.COLUMN_TAG_LIST},
+                new int[]{R.id.date, R.id.amount, R.id.listTags}, 0);
 
         adapter.setViewBinder((view, cursor, columnIndex) -> {
             TextView v = (TextView) view;
@@ -45,6 +44,13 @@ public class DataListFragment extends ListFragment {
                 v.setText(DATE_FORMAT.format(new Date(date)));
             } else if (columnIndex == cursor.getColumnIndex(SpendingEntry.COLUMN_AMOUNT)) {
                 v.setText((cursor.getInt(columnIndex) / 100) + " €");
+            } else if (columnIndex == cursor.getColumnIndex(Database.COLUMN_TAG_LIST)) {
+                String tags = cursor.getString(columnIndex);
+                if (tags == null || tags.isEmpty()) {
+                    v.setText("Click to add tags");
+                } else {
+                    v.setText(tags);
+                }
             } else {
                 return false;
             }
@@ -53,5 +59,22 @@ public class DataListFragment extends ListFragment {
         });
 
         setListAdapter(adapter);
+    }
+
+    @Override
+    public void onListItemClick(ListView list, View v, int position, long id) {
+        EditDataDialog dialog = new EditDataDialog();
+        Bundle args = new Bundle();
+        args.putLong("id", id);
+        dialog.setArguments(args);
+        dialog.setTargetFragment(this, 0);
+        dialog.show(getFragmentManager(), "editdatadialog");
+    }
+
+    void notifyDataChanged() {
+        CursorAdapter adapter = (CursorAdapter) getListAdapter();
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        adapter.changeCursor(db.queryDataForUserView());
+        ((BaseAdapter) getListAdapter()).notifyDataSetChanged();
     }
 }

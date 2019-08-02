@@ -15,10 +15,27 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE " + SpendingEntry.TABLE_NAME +" ( " +
-                SpendingEntry.COLUMN_ID + " INTEGER PRIMARY KEY, "+
-                SpendingEntry.COLUMN_AMOUNT + " INTEGER NOT NULL, "+
+        db.execSQL("CREATE TABLE " + SpendingEntry.TABLE_NAME + " ( " +
+                SpendingEntry.COLUMN_ID + " INTEGER PRIMARY KEY, " +
+                SpendingEntry.COLUMN_AMOUNT + " INTEGER NOT NULL, " +
                 SpendingEntry.COLUMN_DATE + " INTEGER NOT NULL)");
+
+        db.execSQL("CREATE TABLE " + TagEntry.TABLE_NAME + "(" +
+                TagEntry.COLUMN_ID + " INTEGER PRIMARY KEY, " +
+                TagEntry.COLUMN_NAME + " TEXT NOT NULL)");
+
+        db.execSQL("CREATE TABLE " + LocationEntry.TABLE_NAME + "(" +
+                LocationEntry.COLUMN_ID + " INTEGER PRIMARY KEY, " +
+                LocationEntry.COLUMN_LAT + " REAL NOT NULL, " +
+                LocationEntry.COLUMN_LON + " REAL NOT NULL," +
+                LocationEntry.COLUMN_TAG + " INTEGER NOT NULL REFERENCES " + TagEntry.TABLE_NAME + "(" + TagEntry.COLUMN_ID + "))");
+
+        db.execSQL("CREATE TABLE " + TagSpendingEntry.TABLE_NAME + "(" +
+                TagSpendingEntry.COLUMN_ID + " INTEGER PRIMARY KEY, " +
+                TagSpendingEntry.COLUMN_SPENDING + " INTEGER NOT NULL REFERENCES " +
+                SpendingEntry.TABLE_NAME + "(" + SpendingEntry.COLUMN_ID + ")," +
+                TagSpendingEntry.COLUMN_TAG + " INTEGER NOT NULL REFERENCES " +
+                TagEntry.TABLE_NAME + "(" + TagEntry.COLUMN_ID + "))");
     }
 
     @Override
