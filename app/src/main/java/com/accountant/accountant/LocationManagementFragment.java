@@ -37,7 +37,11 @@ public class LocationManagementFragment extends ListFragment {
     }
 
     private void onAddClick() {
-
+        EditLocationDialog dialog = new EditLocationDialog();
+        Bundle args = new Bundle();
+        args.putBoolean("new", true);
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "editlocationdialog");
     }
 
 }

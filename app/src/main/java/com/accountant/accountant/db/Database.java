@@ -157,6 +157,24 @@ public class Database {
                         " ORDER BY " + LocationEntry.COLUMN_ID, null);
     }
 
+    public void insertLocation(String desc, double lat, double lon, long tag) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        String sql = "INSERT INTO " + LocationEntry.TABLE_NAME + " (" +
+                LocationEntry.COLUMN_DESC + ", " +
+                LocationEntry.COLUMN_LAT + ", " +
+                LocationEntry.COLUMN_LON + ", " +
+                LocationEntry.COLUMN_TAG + ")" +
+                " VALUES (?, ?, ?, ?)";
+
+        SQLiteStatement stm = db.compileStatement(sql);
+        stm.bindString(1, desc);
+        stm.bindDouble(2, lat);
+        stm.bindDouble(3, lon);
+        stm.bindLong(4, tag);
+        stm.executeInsert();
+    }
+
+
     public void updateEntry(long id, long date, int amount, Collection<Long> tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
