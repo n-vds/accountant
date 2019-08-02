@@ -6,5 +6,12 @@
     <item
             android:id="@+id/manageTags"
             android:title="Manage tags"
+            android:icon="@drawable/ic_outline_label"
+            app:showAsAction="never"/>
+
+    <item
+            android:id="@+id/manageLocations"
+            android:title="Manage locations"
+            android:icon="@drawable/ic_baseline_place"
             app:showAsAction="never"/>
 </menu>

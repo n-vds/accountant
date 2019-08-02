@@ -9,4 +9,5 @@ public final class LocationEntry {
     public static final String COLUMN_LAT = "lat";
     public static final String COLUMN_LON = "lon";
     public static final String COLUMN_TAG = "tag";
+    public static final String COLUMN_DESC = "descr";
 }

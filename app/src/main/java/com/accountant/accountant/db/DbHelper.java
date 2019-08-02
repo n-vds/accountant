@@ -26,6 +26,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
         db.execSQL("CREATE TABLE " + LocationEntry.TABLE_NAME + "(" +
                 LocationEntry.COLUMN_ID + " INTEGER PRIMARY KEY, " +
+                LocationEntry.COLUMN_DESC + " TEXT NOT NULL, " +
                 LocationEntry.COLUMN_LAT + " REAL NOT NULL, " +
                 LocationEntry.COLUMN_LON + " REAL NOT NULL," +
                 LocationEntry.COLUMN_TAG + " INTEGER NOT NULL REFERENCES " + TagEntry.TABLE_NAME + "(" + TagEntry.COLUMN_ID + "))");

@@ -144,6 +144,19 @@ public class Database {
         return stmt.executeInsert();
     }
 
+
+    public Cursor queryAllLocations() {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        return db.rawQuery(
+                "SELECT " + LocationEntry.COLUMN_ID + " AS _id, " +
+                        LocationEntry.COLUMN_DESC + ", " +
+                        LocationEntry.COLUMN_LAT + ", " +
+                        LocationEntry.COLUMN_LON + ", " +
+                        LocationEntry.COLUMN_TAG +
+                        " FROM " + LocationEntry.TABLE_NAME +
+                        " ORDER BY " + LocationEntry.COLUMN_ID, null);
+    }
+
     public void updateEntry(long id, long date, int amount, Collection<Long> tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
