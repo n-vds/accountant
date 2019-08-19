@@ -22,7 +22,7 @@ public class Database {
      *
      * @param spending the amount spent
      */
-    public void insert(int spending, int... tags) {
+    public void insert(int spending, long... tags) {
         SQLiteDatabase db = helper.getWritableDatabase();
 
         long now = System.currentTimeMillis();
@@ -136,6 +136,35 @@ public class Database {
                 " ORDER BY " + TagEntry.COLUMN_ID, null);
     }
 
+    public TagList queryTagList() {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT " + TagEntry.COLUMN_NAME + ", " +
+                TagEntry.COLUMN_ID + " AS _id, " +
+                TagEntry.COLUMN_ID +
+                " FROM " + TagEntry.TABLE_NAME +
+                " ORDER BY " + TagEntry.COLUMN_ID, null);
+
+        if (cursor.getCount() == 0) {
+            return new TagList();
+        }
+
+        cursor.moveToFirst();
+        int columnId = cursor.getColumnIndexOrThrow(TagEntry.COLUMN_ID);
+        int columnName = cursor.getColumnIndexOrThrow(TagEntry.COLUMN_NAME);
+
+        String[] tagNames = new String[cursor.getCount()];
+        long[] tagIds = new long[cursor.getCount()];
+
+        for (int i = 0; i < cursor.getCount(); i++) {
+            tagNames[i] = cursor.getString(columnName);
+            tagIds[i] = cursor.getLong(columnId);
+            cursor.moveToNext();
+        }
+
+        TagList list = new TagList(tagIds, tagNames);
+        return list;
+    }
+
     public long insertTag(String tagName) {
         SQLiteDatabase db = helper.getWritableDatabase();
         SQLiteStatement stmt = db.compileStatement("INSERT INTO " + TagEntry.TABLE_NAME +
@@ -143,6 +172,141 @@ public class Database {
         stmt.bindString(1, tagName);
         return stmt.executeInsert();
     }
+
+    public Cursor queryAllLocations() {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        return db.rawQuery(
+                "SELECT " + LocationEntry.COLUMN_ID + " AS _id, " +
+                        LocationEntry.COLUMN_DESC + ", " +
+                        LocationEntry.COLUMN_LAT + ", " +
+                        LocationEntry.COLUMN_LON + ", " +
+                        LocationEntry.COLUMN_TAG +
+                        " FROM " + LocationEntry.TABLE_NAME +
+                        " ORDER BY " + LocationEntry.COLUMN_ID + " DESC", null);
+    }
+
+    public LocationEntity queryLocation(long id) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor c = db.rawQuery("" +
+                "SELECT " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " AS _id, " +
+                LocationEntry.COLUMN_DESC + ", " +
+                LocationEntry.COLUMN_LAT + ", " +
+                LocationEntry.COLUMN_LON + ", " +
+                LocationEntry.COLUMN_TAG + ", " +
+                TagEntry.COLUMN_NAME +
+                " FROM " + LocationEntry.TABLE_NAME +
+                " LEFT JOIN " + TagEntry.TABLE_NAME +
+                " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
+                " WHERE " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+
+        if (c.getCount() == 0) {
+            return null;
+        }
+        c.moveToFirst();
+
+        LocationEntity entity = new LocationEntity(
+                c.getString(c.getColumnIndex(LocationEntry.COLUMN_DESC)),
+                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LAT)),
+                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LON)),
+                c.getLong(c.getColumnIndex(LocationEntry.COLUMN_TAG)),
+                c.getString(c.getColumnIndex(TagEntry.COLUMN_NAME)));
+
+        return entity;
+    }
+
+    public DistanceLocationEntity resolveLocation(double lat, double lon) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor c = db.rawQuery("" +
+                "SELECT " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " AS _id, " +
+                LocationEntry.COLUMN_DESC + ", " +
+                LocationEntry.COLUMN_LAT + ", " +
+                LocationEntry.COLUMN_LON + ", " +
+                LocationEntry.COLUMN_TAG + ", " +
+                TagEntry.COLUMN_NAME + ", " +
+                "(abs(" + LocationEntry.COLUMN_LAT + " - ?) * abs(" + LocationEntry.COLUMN_LON + " - ?)) AS distanceSq" +
+                " FROM " + LocationEntry.TABLE_NAME +
+                " LEFT JOIN " + TagEntry.TABLE_NAME +
+                " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
+                " ORDER BY distanceSq ASC", new String[]{
+                String.valueOf(lat), String.valueOf(lon)
+        });
+
+        if (c.getCount() == 0) {
+            return null;
+        }
+        c.moveToFirst();
+
+        LocationEntity entity = new LocationEntity(
+                c.getString(c.getColumnIndex(LocationEntry.COLUMN_DESC)),
+                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LAT)),
+                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LON)),
+                c.getLong(c.getColumnIndex(LocationEntry.COLUMN_TAG)),
+                c.getString(c.getColumnIndex(TagEntry.COLUMN_NAME)));
+
+        double distance = coordinateDistance(lat, lon, entity.lat, entity.lon);
+        return new DistanceLocationEntity(entity, distance);
+
+    }
+
+    private double coordinateDistance(double lat1, double lon1, double lat2, double lon2) {
+        // taken from
+        // https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+        // https://stackoverflow.com/a/365853
+        // by users cletus (https://stackoverflow.com/users/18393/cletus)
+        // and coldfire (https://stackoverflow.com/users/886001/coldfire)
+        // licensed under cc by-sa 3.0 with attribution required
+
+        double deltaLat = Math.toRadians(lat1 - lat2);
+        double deltaLon = Math.toRadians(lon1 - lon2);
+
+        double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2) *
+                        Math.cos(Math.toRadians(lat1)) *
+                        Math.cos(Math.toRadians(lat2));
+
+        double d = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = 6371000 * d; // earth radius in meter
+
+        return distance;
+    }
+
+    public void insertLocation(String desc, double lat, double lon, long tag) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        String sql = "INSERT INTO " + LocationEntry.TABLE_NAME + " (" +
+                LocationEntry.COLUMN_DESC + ", " +
+                LocationEntry.COLUMN_LAT + ", " +
+                LocationEntry.COLUMN_LON + ", " +
+                LocationEntry.COLUMN_TAG + ")" +
+                " VALUES (?, ?, ?, ?)";
+
+        SQLiteStatement stm = db.compileStatement(sql);
+        stm.bindString(1, desc);
+        stm.bindDouble(2, lat);
+        stm.bindDouble(3, lon);
+        stm.bindLong(4, tag);
+        stm.executeInsert();
+    }
+
+    public void updateLocation(long id, String desc, double lat, double lon, long tag) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        String sql = "UPDATE " + LocationEntry.TABLE_NAME + " SET " +
+                LocationEntry.COLUMN_DESC + " = ?, " +
+                LocationEntry.COLUMN_LAT + " = ?, " +
+                LocationEntry.COLUMN_LON + " = ?, " +
+                LocationEntry.COLUMN_TAG + " = ?" +
+                " WHERE " + LocationEntry.COLUMN_ID + " = ?";
+
+        SQLiteStatement stm = db.compileStatement(sql);
+        stm.bindString(1, desc);
+        stm.bindDouble(2, lat);
+        stm.bindDouble(3, lon);
+        stm.bindLong(4, tag);
+        stm.bindLong(5, id);
+        stm.executeUpdateDelete();
+    }
+
 
     public void updateEntry(long id, long date, int amount, Collection<Long> tagIds) {
         SQLiteDatabase db = helper.getWritableDatabase();

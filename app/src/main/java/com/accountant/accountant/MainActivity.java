@@ -52,9 +52,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.manageTags) {
-            switchToManageTags();
-            return true;
+        switch (item.getItemId()) {
+            case R.id.manageTags:
+                switchToManageTags();
+                return true;
+
+            case R.id.manageLocations:
+                switchToManageLocations();
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -94,6 +99,16 @@ public class MainActivity extends AppCompatActivity {
                 .beginTransaction()
                 .addToBackStack(null)
                 .replace(R.id.content, new TagManagementFragment())
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .commit();
+    }
+
+    void switchToManageLocations() {
+        // TODO see #switchToManageTags
+        fragmentManager
+                .beginTransaction()
+                .addToBackStack(null)
+                .replace(R.id.content, new LocationManagementFragment())
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit();
     }

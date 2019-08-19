@@ -5,47 +5,97 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import com.accountant.accountant.db.Database;
+import com.accountant.accountant.db.TagList;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class EditTagsDialog extends DialogFragment {
-    private Collection<Long> selectedTags;
+    public static final String ARG_ONLY_SINGLE_TAG = "onlySingle";
+    public static final String ARG_CHECKED_TAGS = "checked";
+
+    private Set<Long> selectedTags;
+    private List<Long> ids;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        ArrayList<String> tagsNames = getArguments().getStringArrayList("tagNames");
-        long[] tagIds = getArguments().getLongArray("tagIds");
-        boolean[] checked = getArguments().getBooleanArray("checked");
+        Bundle args = getArguments();
+        boolean selectSingleTag = args.getBoolean(ARG_ONLY_SINGLE_TAG, false);
 
-        selectedTags = new ArrayList<>();
-        for (int i = 0; i < tagIds.length; i++) {
-            if (checked[i]) {
-                selectedTags.add(tagIds[i]);
-            }
+        long[] checkedTagIds = args.getLongArray(ARG_CHECKED_TAGS);
+
+        selectedTags = new HashSet<>();
+        for (long tagId : checkedTagIds) {
+            selectedTags.add(tagId);
         }
 
-        String[] tagNamesArr = tagsNames.toArray(new String[tagsNames.size()]);
-        CharSequence[] tagNamesArrCs = tagNamesArr;
-
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMultiChoiceItems(tagNamesArrCs, checked, (dialog, which, isChecked) -> {
-            if (isChecked) {
-                selectedTags.add(tagIds[which]);
-            } else {
-                selectedTags.remove(tagIds[which]);
-            }
+        builder.setTitle("Set tags");
 
-        });
+        createTagList(builder, selectSingleTag);
+
         builder.setPositiveButton(android.R.string.ok, (_v, _i) -> {
-            Fragment target = getTargetFragment();
-            if (target instanceof EditDataDialog) {
-                ((EditDataDialog) target).updateTags(selectedTags);
-            }
-
+            onOkClick();
         });
         builder.setNegativeButton(android.R.string.cancel, (_v, _i) -> {
         });
         return builder.create();
+    }
+
+    private void createTagList(AlertDialog.Builder builder, boolean singleOnly) {
+        Database db = ((MainActivity) getActivity()).getDatabase();
+
+        TagList tagList = db.queryTagList();
+        int count = tagList.getCount();
+
+        CharSequence[] items = tagList.getNames().toArray(new CharSequence[count]);
+        ids = tagList.getIds();
+
+        boolean[] checked = new boolean[count];
+        int checkedItem = -1;
+
+        for (int i = 0; i < ids.size(); i++) {
+            checked[i] = selectedTags.contains(ids.get(i));
+            if (checked[i]) {
+                checkedItem = i;
+            }
+        }
+
+        if (singleOnly) {
+            builder.setSingleChoiceItems(items, checkedItem, (_d, i) -> {
+                onTagClickedSingle(i);
+            });
+        } else {
+            builder.setMultiChoiceItems(items, checked, (_d, which, isChecked) -> {
+                onTagClickedMulti(which, isChecked);
+            });
+        }
+    }
+
+    private void onTagClickedSingle(int i) {
+        long id = ids.get(i);
+        selectedTags.clear();
+        selectedTags.add(id);
+    }
+
+    private void onTagClickedMulti(int i, boolean isChecked) {
+        long id = ids.get(i);
+
+        if (isChecked) {
+            selectedTags.add(id);
+        } else {
+            selectedTags.remove(id);
+        }
+    }
+
+    private void onOkClick() {
+        Fragment target = getTargetFragment();
+        if (target instanceof EditDataDialog) {
+            ((EditDataDialog) target).updateTags(selectedTags);
+        } else if (target instanceof EditLocationDialog) {
+            ((EditLocationDialog) target).updateTags(selectedTags);
+        }
     }
 }
