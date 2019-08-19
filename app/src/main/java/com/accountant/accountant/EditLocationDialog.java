@@ -5,12 +5,14 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.accountant.accountant.db.Database;
+import com.accountant.accountant.db.LocationEntity;
 
 public class EditLocationDialog extends DialogFragment {
     private LocationProvider locationProvider;
@@ -28,7 +30,8 @@ public class EditLocationDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         locationProvider = ((MainActivity) getActivity()).getLocationProvider();
 
-        View root = getLayoutInflater().inflate(R.layout.dialog_editlocation, null);
+        View root = requireActivity().getLayoutInflater()
+                .inflate(R.layout.dialog_editlocation, null);
 
         vDesc = root.findViewById(R.id.desc);
         vLat = root.findViewById(R.id.lat);
@@ -39,9 +42,24 @@ public class EditLocationDialog extends DialogFragment {
         vEditTags = root.findViewById(R.id.editTags);
         //vEditTags.setOnClickListener(_v -> onEditTagsClick());
 
+        String title;
+        Bundle args = getArguments();
+        if (!args.getBoolean("new")) {
+            long id = args.getLong("id");
+            Database db = ((MainActivity) getActivity()).getDatabase();
+            LocationEntity data = db.queryLocation(id);
+
+            title = "Edit location";
+            vDesc.setText(data.desc);
+            vLat.setText(String.valueOf(data.lat));
+            vLon.setText(String.valueOf(data.lon));
+            vListTags.setText(String.valueOf(data.tagName));
+        } else {
+            title = "Create a new location";
+        }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Name of the location: ");
+        builder.setTitle(title);
         builder.setView(root);
         builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
             onOkClick();
@@ -65,11 +83,13 @@ public class EditLocationDialog extends DialogFragment {
                     Toast.makeText(getActivity(), "No permission!", Toast.LENGTH_SHORT).show();
                     vSetHere.setText("H");
                     locationProvider.stopRequest();
+                    locationListener = null;
                     break;
                 case GOT_DATA:
                     vLat.setText(String.valueOf(gps_lat));
                     vLon.setText(String.valueOf(gps_lon));
                     locationProvider.stopRequest();
+                    locationListener = null;
                     break;
             }
         };
@@ -78,10 +98,22 @@ public class EditLocationDialog extends DialogFragment {
 
     private void onOkClick() {
         Database db = ((MainActivity) getActivity()).getDatabase();
+
         String desc = vDesc.getText().toString();
         double lat = Double.parseDouble(vLat.getText().toString());
         double lon = Double.parseDouble(vLon.getText().toString());
         long tag = 0; // TODO
-        db.insertLocation(desc, lat, lon, tag);
+
+        Bundle args = getArguments();
+        if (args.getBoolean("new")) {
+            db.insertLocation(desc, lat, lon, tag);
+        } else {
+            db.updateLocation(args.getLong("id"), desc, lat, lon, tag);
+        }
+
+        Fragment fragment = getTargetFragment();
+        if (fragment instanceof LocationManagementFragment) {
+            ((LocationManagementFragment) fragment).notifyDataChanged();
+        }
     }
 }

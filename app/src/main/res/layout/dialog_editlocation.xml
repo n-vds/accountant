@@ -9,6 +9,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/desc"
             android:inputType="textAutoCorrect"
+            android:hint="Name"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -19,6 +20,8 @@
             android:layout_height="wrap_content"
             android:id="@+id/lat"
             android:inputType="numberDecimal"
+            android:hint="Latitude"
+
             android:layout_marginTop="30dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/setHere"
@@ -30,6 +33,8 @@
             android:layout_height="wrap_content"
             android:id="@+id/lon"
             android:inputType="numberDecimal"
+            android:hint="Longitude"
+
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/setHere"
             app:layout_constraintTop_toBottomOf="@id/lat"/>

@@ -7,6 +7,9 @@ import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.CursorAdapter;
+import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.LocationEntry;
@@ -36,12 +39,31 @@ public class LocationManagementFragment extends ListFragment {
         return root;
     }
 
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        EditLocationDialog dialog = new EditLocationDialog();
+        Bundle args = new Bundle();
+        args.putBoolean("new", false);
+        args.putLong("id", id);
+        dialog.setArguments(args);
+        dialog.setTargetFragment(this, 0);
+        dialog.show(getFragmentManager(), "editlocationdialog");
+    }
+
     private void onAddClick() {
         EditLocationDialog dialog = new EditLocationDialog();
         Bundle args = new Bundle();
         args.putBoolean("new", true);
         dialog.setArguments(args);
+        dialog.setTargetFragment(this, 0);
         dialog.show(getFragmentManager(), "editlocationdialog");
+    }
+
+    void notifyDataChanged() {
+        CursorAdapter adapter = (CursorAdapter) getListAdapter();
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        adapter.changeCursor(db.queryAllLocations());
+        ((BaseAdapter) getListAdapter()).notifyDataSetChanged();
     }
 
 }

@@ -154,7 +154,37 @@ public class Database {
                         LocationEntry.COLUMN_LON + ", " +
                         LocationEntry.COLUMN_TAG +
                         " FROM " + LocationEntry.TABLE_NAME +
-                        " ORDER BY " + LocationEntry.COLUMN_ID, null);
+                        " ORDER BY " + LocationEntry.COLUMN_ID + " DESC", null);
+    }
+
+    public LocationEntity queryLocation(long id) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor c = db.rawQuery("" +
+                "SELECT " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " AS _id, " +
+                LocationEntry.COLUMN_DESC + ", " +
+                LocationEntry.COLUMN_LAT + ", " +
+                LocationEntry.COLUMN_LON + ", " +
+                LocationEntry.COLUMN_TAG + ", " +
+                TagEntry.COLUMN_NAME +
+                " FROM " + LocationEntry.TABLE_NAME +
+                " LEFT JOIN " + TagEntry.TABLE_NAME +
+                " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
+                " WHERE " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+
+        if (c.getCount() == 0) {
+            return null;
+        }
+        c.moveToFirst();
+
+        LocationEntity entity = new LocationEntity(
+                c.getString(c.getColumnIndex(LocationEntry.COLUMN_DESC)),
+                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LAT)),
+                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LON)),
+                c.getLong(c.getColumnIndex(LocationEntry.COLUMN_TAG)),
+                c.getString(c.getColumnIndex(TagEntry.COLUMN_NAME)));
+
+        return entity;
     }
 
     public void insertLocation(String desc, double lat, double lon, long tag) {
@@ -172,6 +202,24 @@ public class Database {
         stm.bindDouble(3, lon);
         stm.bindLong(4, tag);
         stm.executeInsert();
+    }
+
+    public void updateLocation(long id, String desc, double lat, double lon, long tag) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        String sql = "UPDATE " + LocationEntry.TABLE_NAME + " SET " +
+                LocationEntry.COLUMN_DESC + " = ?, " +
+                LocationEntry.COLUMN_LAT + " = ?, " +
+                LocationEntry.COLUMN_LON + " = ?, " +
+                LocationEntry.COLUMN_TAG + " = ?" +
+                " WHERE " + LocationEntry.COLUMN_ID + " = ?";
+
+        SQLiteStatement stm = db.compileStatement(sql);
+        stm.bindString(1, desc);
+        stm.bindDouble(2, lat);
+        stm.bindDouble(3, lon);
+        stm.bindLong(4, tag);
+        stm.bindLong(5, id);
+        stm.executeUpdateDelete();
     }
 
 
