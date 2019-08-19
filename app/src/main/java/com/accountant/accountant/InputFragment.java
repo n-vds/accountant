@@ -9,6 +9,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.accountant.accountant.db.Database;
+import com.accountant.accountant.db.DistanceLocationEntity;
+import com.accountant.accountant.db.LocationEntity;
 
 import java.util.Locale;
 
@@ -24,6 +27,8 @@ public class InputFragment extends Fragment {
     private int inputAmount;
     private Button[] inputButtons;
     private Button buttonDot, buttonGo, buttonDel;
+
+    private LocationEntity knownLocation;
 
     private LocationProvider locationProvider;
     private LocationProvider.LocationProviderUpdate locationListener;
@@ -95,9 +100,21 @@ public class InputFragment extends Fragment {
                 locationMessage.setText("Waiting for location update...");
                 break;
             case GOT_DATA:
-                locationMessage.setText("" + lat + ", " + lon);
                 locationProvider.stopRequest();
+                locationMessage.setText("" + lat + ", " + lon);
+                resolveLocation(lat, lon);
                 break;
+        }
+    }
+
+    private void resolveLocation(double lat, double lon) {
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        DistanceLocationEntity location = db.resolveLocation(lat, lon);
+        if (location == null || location.distance > 150.0) {
+            locationMessage.setText("Unknown location (" + lat + ", " + lon + ")");
+        } else {
+            locationMessage.setText(location.location.desc + " (" + Math.round(location.distance) + "m away)");
+            knownLocation = location.location;
         }
     }
 

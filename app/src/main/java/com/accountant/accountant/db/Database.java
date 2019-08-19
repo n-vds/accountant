@@ -187,6 +187,63 @@ public class Database {
         return entity;
     }
 
+    public DistanceLocationEntity resolveLocation(double lat, double lon) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor c = db.rawQuery("" +
+                "SELECT " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " AS _id, " +
+                LocationEntry.COLUMN_DESC + ", " +
+                LocationEntry.COLUMN_LAT + ", " +
+                LocationEntry.COLUMN_LON + ", " +
+                LocationEntry.COLUMN_TAG + ", " +
+                TagEntry.COLUMN_NAME + ", " +
+                "(abs(" + LocationEntry.COLUMN_LAT + " - ?) * abs(" + LocationEntry.COLUMN_LON + " - ?)) AS distanceSq" +
+                " FROM " + LocationEntry.TABLE_NAME +
+                " LEFT JOIN " + TagEntry.TABLE_NAME +
+                " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
+                " ORDER BY distanceSq ASC", new String[]{
+                String.valueOf(lat), String.valueOf(lon)
+        });
+
+        if (c.getCount() == 0) {
+            return null;
+        }
+        c.moveToFirst();
+
+        LocationEntity entity = new LocationEntity(
+                c.getString(c.getColumnIndex(LocationEntry.COLUMN_DESC)),
+                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LAT)),
+                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LON)),
+                c.getLong(c.getColumnIndex(LocationEntry.COLUMN_TAG)),
+                c.getString(c.getColumnIndex(TagEntry.COLUMN_NAME)));
+
+        double distance = coordinateDistance(lat, lon, entity.lat, entity.lon);
+        return new DistanceLocationEntity(entity, distance);
+
+    }
+
+    private double coordinateDistance(double lat1, double lon1, double lat2, double lon2) {
+        // taken from
+        // https://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates
+        // https://stackoverflow.com/a/365853
+        // by users cletus (https://stackoverflow.com/users/18393/cletus)
+        // and coldfire (https://stackoverflow.com/users/886001/coldfire)
+        // licensed under cc by-sa 3.0 with attribution required
+
+        double deltaLat = Math.toRadians(lat1 - lat2);
+        double deltaLon = Math.toRadians(lon1 - lon2);
+
+        double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2) *
+                        Math.cos(Math.toRadians(lat1)) *
+                        Math.cos(Math.toRadians(lat2));
+
+        double d = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = 6371000 * d; // earth radius in meter
+
+        return distance;
+    }
+
     public void insertLocation(String desc, double lat, double lon, long tag) {
         SQLiteDatabase db = helper.getWritableDatabase();
         String sql = "INSERT INTO " + LocationEntry.TABLE_NAME + " (" +
