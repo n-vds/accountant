@@ -136,6 +136,35 @@ public class Database {
                 " ORDER BY " + TagEntry.COLUMN_ID, null);
     }
 
+    public TagList queryTagList() {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT " + TagEntry.COLUMN_NAME + ", " +
+                TagEntry.COLUMN_ID + " AS _id, " +
+                TagEntry.COLUMN_ID +
+                " FROM " + TagEntry.TABLE_NAME +
+                " ORDER BY " + TagEntry.COLUMN_ID, null);
+
+        if (cursor.getCount() == 0) {
+            return new TagList();
+        }
+
+        cursor.moveToFirst();
+        int columnId = cursor.getColumnIndexOrThrow(TagEntry.COLUMN_ID);
+        int columnName = cursor.getColumnIndexOrThrow(TagEntry.COLUMN_NAME);
+
+        String[] tagNames = new String[cursor.getCount()];
+        long[] tagIds = new long[cursor.getCount()];
+
+        for (int i = 0; i < cursor.getCount(); i++) {
+            tagNames[i] = cursor.getString(columnName);
+            tagIds[i] = cursor.getLong(columnId);
+            cursor.moveToNext();
+        }
+
+        TagList list = new TagList(tagIds, tagNames);
+        return list;
+    }
+
     public long insertTag(String tagName) {
         SQLiteDatabase db = helper.getWritableDatabase();
         SQLiteStatement stmt = db.compileStatement("INSERT INTO " + TagEntry.TABLE_NAME +
@@ -143,7 +172,6 @@ public class Database {
         stmt.bindString(1, tagName);
         return stmt.executeInsert();
     }
-
 
     public Cursor queryAllLocations() {
         SQLiteDatabase db = helper.getReadableDatabase();

@@ -2,7 +2,6 @@ package com.accountant.accountant;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -13,23 +12,22 @@ import android.widget.Button;
 import android.widget.EditText;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntity;
-import com.accountant.accountant.db.TagEntry;
+import com.accountant.accountant.db.TagList;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class EditDataDialog extends DialogFragment {
     private EditText vDate;
     private EditText vAmount;
     private Button vTags;
 
-    private ArrayList<String> tagNames;
-    private long[] tagIds;
-    private List<Long> selectedTagIds;
+    private TagList tagList;
+    private Set<Long> selectedTagIds;
 
     private SpendingEntity originalData;
 
@@ -39,14 +37,13 @@ public class EditDataDialog extends DialogFragment {
         long id = getArguments().getLong("id");
 
         Database db = ((MainActivity) getActivity()).getDatabase();
+        tagList = db.queryTagList();
         originalData = db.querySingle(id);
 
-        selectedTagIds = new ArrayList<>();
+        selectedTagIds = new HashSet<>();
         for (long tag : originalData.tagIds) {
             selectedTagIds.add(tag);
         }
-
-        getTags();
 
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_editdata, null);
@@ -64,24 +61,8 @@ public class EditDataDialog extends DialogFragment {
         builder.setView(view);
         builder.setPositiveButton(android.R.string.ok, (_d, _i) -> onOkClick());
         builder.setNegativeButton(android.R.string.cancel, (_d, _i) -> {
-            // do nothing on cancel
         });
         return builder.create();
-    }
-
-    private void getTags() {
-        Database db = ((MainActivity) getActivity()).getDatabase();
-
-        Cursor cursor = db.queryAllTagNames();
-        tagNames = new ArrayList<>(cursor.getCount());
-        tagIds = new long[cursor.getCount()];
-
-        cursor.moveToFirst();
-        for (int i = 0; i < tagIds.length; i++) {
-            tagNames.add(cursor.getString(cursor.getColumnIndex(TagEntry.COLUMN_NAME)));
-            tagIds[i] = cursor.getLong(cursor.getColumnIndex(TagEntry.COLUMN_ID));
-            cursor.moveToNext();
-        }
     }
 
     private String buildTagString() {
@@ -90,24 +71,19 @@ public class EditDataDialog extends DialogFragment {
         }
 
         StringBuilder b = new StringBuilder();
-        for (int i = 0; i < selectedTagIds.size(); i++) {
-            if (i != 0) {
+        boolean first = true;
+        for (long tagId : selectedTagIds) {
+            if (!first) {
                 b.append(", ");
             }
 
-            boolean found = false;
-
-            for (int j = 0; j < tagNames.size(); j++) {
-                if (selectedTagIds.get(i) == tagIds[j]) {
-                    b.append(tagNames.get(j));
-                    found = true;
-                    break;
-                }
+            String tagName = tagList.getName(tagId);
+            if (tagName == null) {
+                b.append("<unknown #").append(tagId).append(">");
+            } else {
+                b.append(tagName);
             }
-
-            if (!found) {
-                b.append("<unknown #").append(selectedTagIds.get(i)).append('>');
-            }
+            first = false;
         }
 
         return b.toString();
@@ -135,19 +111,14 @@ public class EditDataDialog extends DialogFragment {
     }
 
     private void onTagsClick() {
-        boolean[] checked = new boolean[tagIds.length];
-
-        for (int i = 0; i < tagIds.length; i++) {
-            checked[i] = selectedTagIds.contains(tagIds[i]);
-        }
-
         EditTagsDialog dialog = new EditTagsDialog();
         dialog.setTargetFragment(this, 0);
+
         Bundle args = new Bundle();
-        args.putStringArrayList("tagNames", tagNames);
-        args.putLongArray("tagIds", tagIds);
-        args.putBooleanArray("checked", checked);
+        args.putBoolean(EditTagsDialog.ARG_ONLY_SINGLE_TAG, false);
+        args.putLongArray(EditTagsDialog.ARG_CHECKED_TAGS, toLongArray(selectedTagIds));
         dialog.setArguments(args);
+
         dialog.show(getFragmentManager(), "edittags");
     }
 
@@ -155,5 +126,15 @@ public class EditDataDialog extends DialogFragment {
         this.selectedTagIds.clear();
         this.selectedTagIds.addAll(selectedTags);
         vTags.setText(buildTagString());
+    }
+
+    private long[] toLongArray(Collection<Long> collection) {
+        long[] arr = new long[collection.size()];
+        int i = 0;
+        for (long l : collection) {
+            arr[i] = l;
+            i++;
+        }
+        return arr;
     }
 }
