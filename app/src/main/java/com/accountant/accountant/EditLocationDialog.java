@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,6 +15,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.LocationEntity;
+import com.accountant.accountant.db.TagList;
+
+import java.util.Collection;
 
 public class EditLocationDialog extends DialogFragment {
     private LocationProvider locationProvider;
@@ -22,9 +26,12 @@ public class EditLocationDialog extends DialogFragment {
     private EditText vDesc;
     private EditText vLat;
     private EditText vLon;
-    private Button vSetHere;
+    private View vSetHere;
     private TextView vListTags;
     private Button vEditTags;
+
+    private Long selectedTag = null;
+    private TagList tagList;
 
     @NonNull
     @Override
@@ -43,12 +50,14 @@ public class EditLocationDialog extends DialogFragment {
         vEditTags = root.findViewById(R.id.editTags);
         vEditTags.setOnClickListener(_v -> onEditTagsClick());
 
-        String title;
+        Database db = ((MainActivity) getActivity()).getDatabase();
         Bundle args = getArguments();
+
+        String title;
         if (!args.getBoolean("new")) {
             long id = args.getLong("id");
-            Database db = ((MainActivity) getActivity()).getDatabase();
             LocationEntity data = db.queryLocation(id);
+            selectedTag = data.tag;
 
             title = "Edit location";
             vDesc.setText(data.desc);
@@ -58,6 +67,8 @@ public class EditLocationDialog extends DialogFragment {
         } else {
             title = "Create a new location";
         }
+
+        tagList = db.queryTagList();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(title)
@@ -93,11 +104,11 @@ public class EditLocationDialog extends DialogFragment {
         locationListener = (status, gps_lat, gps_lon) -> {
             switch (status) {
                 case WAITING:
-                    vSetHere.setText("...");
+                    vSetHere.setEnabled(false);
                     break;
                 case NO_PERMISSION:
                     Toast.makeText(getActivity(), "No permission!", Toast.LENGTH_SHORT).show();
-                    vSetHere.setText("H");
+                    vSetHere.setEnabled(true);
                     locationProvider.stopRequest();
                     locationListener = null;
                     break;
@@ -105,6 +116,7 @@ public class EditLocationDialog extends DialogFragment {
                     vLat.setText(String.valueOf(gps_lat));
                     vLon.setText(String.valueOf(gps_lon));
                     locationProvider.stopRequest();
+                    vSetHere.setEnabled(true);
                     locationListener = null;
                     break;
             }
@@ -130,7 +142,11 @@ public class EditLocationDialog extends DialogFragment {
             return;
         }
 
-        long tag = 0; // TODO
+        if (selectedTag == null) {
+            Toast.makeText(getActivity(), "Select a tag", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        long tag = selectedTag;
 
         Bundle args = getArguments();
         if (args.getBoolean("new")) {
@@ -148,6 +164,29 @@ public class EditLocationDialog extends DialogFragment {
     }
 
     private void onEditTagsClick() {
+        EditTagsDialog dialog = new EditTagsDialog();
 
+        Bundle args = new Bundle();
+        args.putBoolean(EditTagsDialog.ARG_ONLY_SINGLE_TAG, true);
+        if (selectedTag == null) {
+            args.putLongArray(EditTagsDialog.ARG_CHECKED_TAGS, new long[]{});
+        } else {
+            args.putLongArray(EditTagsDialog.ARG_CHECKED_TAGS, new long[]{selectedTag});
+        }
+        dialog.setArguments(args);
+        dialog.setTargetFragment(this, 0);
+        dialog.show(getFragmentManager(), "locationedittags");
+    }
+
+    public void updateTags(Collection<Long> selectedTags) {
+        if (selectedTags.size() == 0) {
+            selectedTag = null;
+            vListTags.setText("<Not tag>");
+        } else if (selectedTags.size() == 1) {
+            selectedTag = selectedTags.iterator().next();
+            vListTags.setText(tagList.getName(selectedTag));
+        } else {
+            Log.e(EditLocationDialog.class.getSimpleName(), "updateTags called with > 1 selected tags");
+        }
     }
 }

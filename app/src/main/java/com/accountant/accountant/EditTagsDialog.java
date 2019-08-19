@@ -32,6 +32,7 @@ public class EditTagsDialog extends DialogFragment {
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Set tags");
 
         createTagList(builder, selectSingleTag);
 
@@ -57,7 +58,7 @@ public class EditTagsDialog extends DialogFragment {
 
         for (int i = 0; i < ids.size(); i++) {
             checked[i] = selectedTags.contains(ids.get(i));
-            if (singleOnly && checked[i]) {
+            if (checked[i]) {
                 checkedItem = i;
             }
         }
@@ -93,6 +94,8 @@ public class EditTagsDialog extends DialogFragment {
         Fragment target = getTargetFragment();
         if (target instanceof EditDataDialog) {
             ((EditDataDialog) target).updateTags(selectedTags);
+        } else if (target instanceof EditLocationDialog) {
+            ((EditLocationDialog) target).updateTags(selectedTags);
         }
     }
 }
