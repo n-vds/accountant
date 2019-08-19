@@ -135,7 +135,13 @@ public class InputFragment extends Fragment {
             return;
         }
 
-        activity.getDatabase().insert(inputAmount * 100);
+        Database db = activity.getDatabase();
+        if (knownLocation == null)  {
+            db.insert(inputAmount * 100);
+        } else {
+            db.insert(inputAmount * 100, knownLocation.tag);
+        }
+
         inputAmount = 0;
         handleAmountChange();
         activity.switchToData();

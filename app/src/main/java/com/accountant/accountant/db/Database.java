@@ -22,7 +22,7 @@ public class Database {
      *
      * @param spending the amount spent
      */
-    public void insert(int spending, int... tags) {
+    public void insert(int spending, long... tags) {
         SQLiteDatabase db = helper.getWritableDatabase();
 
         long now = System.currentTimeMillis();

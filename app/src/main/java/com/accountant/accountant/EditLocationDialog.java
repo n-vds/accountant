@@ -2,6 +2,7 @@ package com.accountant.accountant;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -40,7 +41,7 @@ public class EditLocationDialog extends DialogFragment {
         vSetHere.setOnClickListener(_v -> setLocationHere());
         vListTags = root.findViewById(R.id.listTags);
         vEditTags = root.findViewById(R.id.editTags);
-        //vEditTags.setOnClickListener(_v -> onEditTagsClick());
+        vEditTags.setOnClickListener(_v -> onEditTagsClick());
 
         String title;
         Bundle args = getArguments();
@@ -59,15 +60,30 @@ public class EditLocationDialog extends DialogFragment {
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle(title);
-        builder.setView(root);
-        builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
-            onOkClick();
-        });
-        builder.setNegativeButton(android.R.string.cancel, (_d, _w) -> {
-        });
+        builder.setTitle(title)
+                .setView(root)
+                .setPositiveButton(android.R.string.ok, (_d, _w) -> {
+                    // Do nothing
+                    // this gets overridden in onResume
+                })
+                .setNegativeButton(android.R.string.cancel, (_d, _w) -> {
+                });
 
         return builder.create();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (getDialog() != null) {
+            AlertDialog dialog = ((AlertDialog) getDialog());
+            // Set the listener here,
+            // so the dialog does not get dismissed automatically
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener((_v) -> {
+                onOkClick(dialog);
+            });
+        }
     }
 
     private void setLocationHere() {
@@ -96,12 +112,24 @@ public class EditLocationDialog extends DialogFragment {
         locationProvider.startRequest(locationListener);
     }
 
-    private void onOkClick() {
+    private void onOkClick(DialogInterface dialog) {
         Database db = ((MainActivity) getActivity()).getDatabase();
 
         String desc = vDesc.getText().toString();
-        double lat = Double.parseDouble(vLat.getText().toString());
-        double lon = Double.parseDouble(vLon.getText().toString());
+        if (desc.isEmpty()) {
+            Toast.makeText(getActivity(), "Input a valid name", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        double lat, lon;
+        try {
+            lat = Double.parseDouble(vLat.getText().toString());
+            lon = Double.parseDouble(vLon.getText().toString());
+        } catch (NumberFormatException _e) {
+            Toast.makeText(getActivity(), "Invalid location", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         long tag = 0; // TODO
 
         Bundle args = getArguments();
@@ -115,5 +143,11 @@ public class EditLocationDialog extends DialogFragment {
         if (fragment instanceof LocationManagementFragment) {
             ((LocationManagementFragment) fragment).notifyDataChanged();
         }
+
+        dialog.dismiss();
+    }
+
+    private void onEditTagsClick() {
+
     }
 }
