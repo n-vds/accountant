@@ -144,7 +144,8 @@ public class InputFragment extends Fragment {
 
         inputAmount = 0;
         handleAmountChange();
-        activity.switchToData();
+
+        ((MainContentFragment) getParentFragment()).switchToData();
     }
 
     private void onDelClick() {
