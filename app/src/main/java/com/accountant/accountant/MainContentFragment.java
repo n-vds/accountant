@@ -17,7 +17,7 @@ public class MainContentFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_main, container);
+        View root = inflater.inflate(R.layout.fragment_main, container, false);
 
         navbar = root.findViewById(R.id.navigation);
         navbar.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
