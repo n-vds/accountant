@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import com.accountant.accountant.db.Database;
 
@@ -81,13 +82,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchToManageTags() {
-        Navigation.findNavController(this, R.id.nav_host_fragment)
-                .navigate(R.id.mainContentToTagManagement);
+        NavController nav = Navigation.findNavController(this, R.id.nav_host_fragment);
+        switch (nav.getCurrentDestination().getId()) {
+            case R.id.tagManagementFragment:
+            case R.id.locationManagementFragment:
+                nav.popBackStack(R.id.mainContentFragment, false);
+        }
+        nav.navigate(R.id.mainContentToTagManagement);
     }
 
     private void switchToManageLocations() {
-        Navigation.findNavController(this, R.id.nav_host_fragment)
-                .navigate(R.id.mainContentToLocationManagement);
+        NavController nav = Navigation.findNavController(this, R.id.nav_host_fragment);
+        switch (nav.getCurrentDestination().getId()) {
+            case R.id.tagManagementFragment:
+            case R.id.locationManagementFragment:
+                nav.popBackStack(R.id.mainContentFragment, false);
+        }
+
+        nav.navigate(R.id.mainContentToLocationManagement);
     }
 
     @Override

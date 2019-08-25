@@ -20,7 +20,7 @@
     <fragment
             android:id="@+id/tagManagementFragment"
             android:name="com.accountant.accountant.TagManagementFragment"
-            android:label="Blank"/>
+            android:label="Blank" />
 
     <fragment
             android:id="@+id/locationManagementFragment"
