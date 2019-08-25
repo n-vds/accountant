@@ -1,14 +1,14 @@
 package com.accountant.accountant;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.DistanceLocationEntity;
 import com.accountant.accountant.db.LocationEntity;
@@ -136,7 +136,7 @@ public class InputFragment extends Fragment {
         }
 
         Database db = activity.getDatabase();
-        if (knownLocation == null)  {
+        if (knownLocation == null) {
             db.insert(inputAmount * 100);
         } else {
             db.insert(inputAmount * 100, knownLocation.tag);

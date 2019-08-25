@@ -1,12 +1,12 @@
 package com.accountant.accountant;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.ListFragment;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntry;
 
