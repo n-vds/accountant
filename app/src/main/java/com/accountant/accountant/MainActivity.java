@@ -7,6 +7,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
@@ -21,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
 
     private FragmentManager fragmentManager;
 
+    private Fragment fragmentMainContent, fragmentTags, fragmentLocations;
+
     private LocationProvider locationProvider;
 
     @Override
@@ -32,9 +35,12 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(findViewById(R.id.toolbar));
 
         fragmentManager = getSupportFragmentManager();
+        fragmentMainContent = new MainContentFragment();
+        fragmentLocations = new LocationManagementFragment();
+        fragmentTags = new TagManagementFragment();
 
         fragmentManager.beginTransaction()
-                .replace(R.id.root, new MainContentFragment())
+                .add(R.id.root, fragmentMainContent)
                 .commit();
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -93,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         fragmentManager
                 .beginTransaction()
                 .addToBackStack(null)
-                .replace(R.id.root, new TagManagementFragment())
+                .replace(R.id.root, fragmentTags)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit();
     }
@@ -102,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         fragmentManager
                 .beginTransaction()
                 .addToBackStack(null)
-                .replace(R.id.root, new LocationManagementFragment())
+                .replace(R.id.root, fragmentLocations)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit();
     }
