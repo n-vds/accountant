@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/nav_graph"
+        app:startDestination="@id/mainContentFragment">
+
+    <fragment
+            android:id="@+id/mainContentFragment"
+            android:name="com.accountant.accountant.MainContentFragment"
+            android:label="Blank">
+        <action
+                android:id="@+id/mainContentToTagManagement"
+                app:destination="@id/tagManagementFragment"/>
+        <action
+                android:id="@+id/mainContentToLocationManagement"
+                app:destination="@id/locationManagementFragment"/>
+    </fragment>
+
+    <fragment
+            android:id="@+id/tagManagementFragment"
+            android:name="com.accountant.accountant.TagManagementFragment"
+            android:label="Blank"/>
+
+    <fragment
+            android:id="@+id/locationManagementFragment"
+            android:name="com.accountant.accountant.LocationManagementFragment"
+            android:label="Blank"/>
+
+</navigation>

@@ -11,19 +11,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.Navigation;
 import com.accountant.accountant.db.Database;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_LOCATION_REQ_CODE = 35415;
+
     private Database db;
-
-    private FragmentManager fragmentManager;
-
-    private Fragment fragmentMainContent, fragmentTags, fragmentLocations;
-
     private LocationProvider locationProvider;
 
     @Override
@@ -33,15 +27,6 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         setSupportActionBar(findViewById(R.id.toolbar));
-
-        fragmentManager = getSupportFragmentManager();
-        fragmentMainContent = new MainContentFragment();
-        fragmentLocations = new LocationManagementFragment();
-        fragmentTags = new TagManagementFragment();
-
-        fragmentManager.beginTransaction()
-                .add(R.id.root, fragmentMainContent)
-                .commit();
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationProvider = new LocationProvider(this, locationManager);
@@ -96,21 +81,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void switchToManageTags() {
-        fragmentManager
-                .beginTransaction()
-                .addToBackStack(null)
-                .replace(R.id.root, fragmentTags)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
+        Navigation.findNavController(this, R.id.nav_host_fragment)
+                .navigate(R.id.mainContentToTagManagement);
     }
 
     private void switchToManageLocations() {
-        fragmentManager
-                .beginTransaction()
-                .addToBackStack(null)
-                .replace(R.id.root, fragmentLocations)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
+        Navigation.findNavController(this, R.id.nav_host_fragment)
+                .navigate(R.id.mainContentToLocationManagement);
     }
 
     @Override
