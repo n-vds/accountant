@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
+import java.util.Calendar;
 import java.util.Collection;
 
 public class Database {
@@ -54,6 +55,62 @@ public class Database {
                         "VALUES " + tagValuesString);
             }
             db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public StatisticsEntity queryStatistics() {
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        Calendar calendar = Calendar.getInstance();
+        long now = calendar.getTimeInMillis();
+
+        calendar.set(
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.getActualMinimum(Calendar.DAY_OF_MONTH),
+                calendar.getActualMinimum(Calendar.HOUR_OF_DAY),
+                calendar.getActualMinimum(Calendar.MINUTE),
+                calendar.getActualMinimum(Calendar.SECOND));
+
+        long startOfMonth = calendar.getTimeInMillis();
+
+        calendar.set(
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.getActualMaximum(Calendar.DAY_OF_MONTH),
+                calendar.getActualMaximum(Calendar.HOUR_OF_DAY),
+                calendar.getActualMaximum(Calendar.MINUTE),
+                calendar.getActualMaximum(Calendar.SECOND));
+
+        long endOfMonth = calendar.getTimeInMillis();
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_MONTH, -30);
+        long thirtyDaysAgo = calendar.getTimeInMillis();
+
+        db.beginTransaction();
+        try {
+            String sql = "SELECT " +
+                    "SUM(" + SpendingEntry.COLUMN_AMOUNT + ") AS this_month " +
+                    "FROM " + SpendingEntry.TABLE_NAME + " " +
+                    "WHERE " + SpendingEntry.COLUMN_DATE + " >= ? AND " +
+                    SpendingEntry.COLUMN_DATE + " <= ?";
+
+            Cursor c = db.rawQuery(sql, new String[]{String.valueOf(startOfMonth), String.valueOf(endOfMonth)});
+            c.moveToFirst();
+            int spentThisMonth = c.getInt(0);
+            c.close();
+
+            c = db.rawQuery(sql, new String[]{String.valueOf(thirtyDaysAgo), String.valueOf(now)});
+            c.moveToFirst();
+            int spentLastThirtyDays = c.getInt(0);
+            c.close();
+
+            db.setTransactionSuccessful();
+
+            return new StatisticsEntity(spentThisMonth, spentLastThirtyDays, 0f, null);
         } finally {
             db.endTransaction();
         }
