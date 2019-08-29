@@ -7,14 +7,15 @@
 
     <TextView
             android:text="Spending:"
+            android:textSize="25sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="24sp"
             android:layout_marginTop="24dp"
             android:layout_marginStart="24dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            android:id="@+id/tvSpending"/>
+            android:id="@+id/tvSpending"
+            android:textStyle="bold"/>
 
     <TextView
             android:text="this month:"
@@ -39,7 +40,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/barrier1"
             app:barrierDirection="end"
-            app:constraint_referenced_ids="tvThisMonth,tvLastThirtyDays"/>
+            app:constraint_referenced_ids="tvThisMonth,tvLastThirtyDays,tvMonthlyAvg"/>
 
 
     <TextView
@@ -59,7 +60,30 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintBaseline_toBaselineOf="@id/tvLastThirtyDays"
-            app:layout_constraintLeft_toRightOf="@id/barrier1"
+            app:layout_constraintStart_toEndOf="@id/barrier1"
             android:id="@+id/dataLastThirtyDays"/>
+
+    <!-- ******************************************************************** -->
+
+    <TextView
+            android:text="Monthly average:"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/tvMonthlyAvg"
+            app:layout_constraintStart_toStartOf="@+id/tvLastThirtyDays"
+            app:layout_constraintTop_toBottomOf="@id/tvLastThirtyDays"
+            android:layout_marginTop="25dp"/>
+
+    <TextView
+            android:text="20 €"
+            android:textSize="20sp"
+            android:layout_marginStart="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/dataMonthlyAvg"
+            app:layout_constraintStart_toEndOf="@id/barrier1"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvMonthlyAvg"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

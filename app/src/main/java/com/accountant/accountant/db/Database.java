@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 
@@ -27,12 +28,14 @@ public class Database {
         SQLiteDatabase db = helper.getWritableDatabase();
 
         long now = System.currentTimeMillis();
+        int month = Calendar.getInstance().get(Calendar.MONTH);
 
         db.beginTransaction();
         try {
             ContentValues values = new ContentValues(1);
             values.put(SpendingEntry.COLUMN_AMOUNT, spending);
             values.put(SpendingEntry.COLUMN_DATE, now);
+            values.put(SpendingEntry.COLUMN_MONTH, month);
             long rowId = db.insert(SpendingEntry.TABLE_NAME, null, values);
 
             if (tags != null && tags.length > 0) {
@@ -65,55 +68,68 @@ public class Database {
 
         Calendar calendar = Calendar.getInstance();
         long now = calendar.getTimeInMillis();
-
-        calendar.set(
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.getActualMinimum(Calendar.DAY_OF_MONTH),
-                calendar.getActualMinimum(Calendar.HOUR_OF_DAY),
-                calendar.getActualMinimum(Calendar.MINUTE),
-                calendar.getActualMinimum(Calendar.SECOND));
-
-        long startOfMonth = calendar.getTimeInMillis();
-
-        calendar.set(
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.getActualMaximum(Calendar.DAY_OF_MONTH),
-                calendar.getActualMaximum(Calendar.HOUR_OF_DAY),
-                calendar.getActualMaximum(Calendar.MINUTE),
-                calendar.getActualMaximum(Calendar.SECOND));
-
-        long endOfMonth = calendar.getTimeInMillis();
-
-        calendar = Calendar.getInstance();
+        int month = calendar.get(Calendar.MONTH);
         calendar.add(Calendar.DAY_OF_MONTH, -30);
         long thirtyDaysAgo = calendar.getTimeInMillis();
 
         db.beginTransaction();
         try {
-            String sql = "SELECT " +
-                    "SUM(" + SpendingEntry.COLUMN_AMOUNT + ") AS this_month " +
+            String sqlBetween = "SELECT " +
+                    "SUM(" + SpendingEntry.COLUMN_AMOUNT + ") " +
                     "FROM " + SpendingEntry.TABLE_NAME + " " +
                     "WHERE " + SpendingEntry.COLUMN_DATE + " >= ? AND " +
                     SpendingEntry.COLUMN_DATE + " <= ?";
 
-            Cursor c = db.rawQuery(sql, new String[]{String.valueOf(startOfMonth), String.valueOf(endOfMonth)});
-            c.moveToFirst();
-            int spentThisMonth = c.getInt(0);
-            c.close();
-
-            c = db.rawQuery(sql, new String[]{String.valueOf(thirtyDaysAgo), String.valueOf(now)});
+            Cursor c = db.rawQuery(sqlBetween, new String[]{String.valueOf(thirtyDaysAgo), String.valueOf(now)});
             c.moveToFirst();
             int spentLastThirtyDays = c.getInt(0);
             c.close();
 
+            String sqlThisMonth = "SELECT " +
+                    "SUM(" + SpendingEntry.COLUMN_AMOUNT + ") " +
+                    "FROM " + SpendingEntry.TABLE_NAME + " " +
+                    "WHERE " + SpendingEntry.COLUMN_MONTH + " = ?";
+            c = db.rawQuery(sqlThisMonth, new String[]{String.valueOf(month)});
+            c.moveToFirst();
+            int spentThisMonth = c.getInt(0);
+            c.close();
+
+            String avgMonth = "SELECT " +
+                    "AVG(" + SpendingEntry.COLUMN_AMOUNT + ") AS avg, " +
+                    SpendingEntry.COLUMN_MONTH + " " +
+                    "FROM " + SpendingEntry.TABLE_NAME + " " +
+                    "GROUP BY " + SpendingEntry.COLUMN_MONTH;
+            c = db.rawQuery(avgMonth, null);
+
+            float[] avgValues = new float[12];
+            Arrays.fill(avgValues, Float.NaN);
+
+            int idxMonth = c.getColumnIndex(SpendingEntry.COLUMN_MONTH);
+            int idxAvg = c.getColumnIndex("avg");
+
+            float sumOfMonthAvg = 0f;
+            int count = 0;
+
+            for (int i = 0; i < c.getCount(); i++) {
+                if (i == 0) {
+                    c.moveToFirst();
+                }
+                float avg = c.getFloat(idxAvg);
+                avgValues[c.getInt(idxMonth)] = avg; // Calendar's month start at 0
+                sumOfMonthAvg += avg;
+                count++;
+                c.moveToNext();
+            }
+
+            float avgInOneMonth = sumOfMonthAvg / (float) count;
+
             db.setTransactionSuccessful();
 
-            return new StatisticsEntity(spentThisMonth, spentLastThirtyDays, 0f, null);
+            return new StatisticsEntity(spentThisMonth, spentLastThirtyDays, avgInOneMonth, avgValues);
         } finally {
             db.endTransaction();
         }
+
     }
 
     public Cursor queryDataForUserView() {
@@ -366,14 +382,19 @@ public class Database {
 
 
     public void updateEntry(long id, long date, int amount, Collection<Long> tagIds) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(date);
+        int month = calendar.get(Calendar.MONTH);
+
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
         try {
             String sqlSpending = "UPDATE " + SpendingEntry.TABLE_NAME +
                     " SET " + SpendingEntry.COLUMN_DATE + " = ?, " +
-                    SpendingEntry.COLUMN_AMOUNT + " = ? " +
+                    SpendingEntry.COLUMN_AMOUNT + " = ?, " +
+                    SpendingEntry.COLUMN_MONTH + " = ? " +
                     " WHERE " + SpendingEntry.COLUMN_ID + " = ?";
-            db.execSQL(sqlSpending, new Object[]{date, amount, id});
+            db.execSQL(sqlSpending, new Object[]{date, amount, month, id});
 
             String sqlDeleteOldTags = "DELETE FROM " + TagSpendingEntry.TABLE_NAME +
                     " WHERE " + TagSpendingEntry.COLUMN_SPENDING + " = ?";
