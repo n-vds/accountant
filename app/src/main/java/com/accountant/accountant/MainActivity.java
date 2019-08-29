@@ -1,6 +1,5 @@
 package com.accountant.accountant;
 
-
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -12,18 +11,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import com.accountant.accountant.db.Database;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_LOCATION_REQ_CODE = 35415;
+
     private Database db;
-
-    private FragmentManager fragmentManager;
-    private BottomNavigationView navbar;
-
     private LocationProvider locationProvider;
 
     @Override
@@ -33,12 +28,6 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         setSupportActionBar(findViewById(R.id.toolbar));
-
-        navbar = findViewById(R.id.navigation);
-        navbar.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
-
-        fragmentManager = getSupportFragmentManager();
-        navbar.setSelectedItemId(R.id.action_insert);
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationProvider = new LocationProvider(this, locationManager);
@@ -92,65 +81,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void switchToManageTags() {
-        // TODO: this does not uncheck the navbar, leading to a bug:
-        // TODO: if the user clicks on the checked item, this fragment is not closed
-        fragmentManager
-                .beginTransaction()
-                .addToBackStack(null)
-                .replace(R.id.content, new TagManagementFragment())
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
+    private void switchToManageTags() {
+        NavController nav = Navigation.findNavController(this, R.id.nav_host_fragment);
+        switch (nav.getCurrentDestination().getId()) {
+            case R.id.tagManagementFragment:
+            case R.id.locationManagementFragment:
+                nav.popBackStack(R.id.mainContentFragment, false);
+        }
+        nav.navigate(R.id.mainContentToTagManagement);
     }
 
-    void switchToManageLocations() {
-        // TODO see #switchToManageTags
-        fragmentManager
-                .beginTransaction()
-                .addToBackStack(null)
-                .replace(R.id.content, new LocationManagementFragment())
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
-    }
-
-    void switchToData() {
-        navbar.setSelectedItemId(R.id.action_show_list);
-    }
-
-    private void switchDirectlyToData() {
-        fragmentManager
-                .beginTransaction()
-                .replace(R.id.content, new DataListFragment())
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
-    }
-
-    private void switchDirectlyToInsert() {
-        fragmentManager
-                .beginTransaction()
-                .replace(R.id.content, new InputFragment())
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
-    }
-
-    private boolean onNavigationItemSelected(MenuItem item) {
-        if (item.getItemId() == navbar.getSelectedItemId()) {
-            // FIXME this only works as long as theres no deeper navigation
-            return false;
+    private void switchToManageLocations() {
+        NavController nav = Navigation.findNavController(this, R.id.nav_host_fragment);
+        switch (nav.getCurrentDestination().getId()) {
+            case R.id.tagManagementFragment:
+            case R.id.locationManagementFragment:
+                nav.popBackStack(R.id.mainContentFragment, false);
         }
 
-        switch (item.getItemId()) {
-            case R.id.action_home:
-                break;
-            case R.id.action_insert:
-                switchDirectlyToInsert();
-                break;
-            case R.id.action_show_list:
-                switchDirectlyToData();
-                break;
-        }
-
-        return true;
+        nav.navigate(R.id.mainContentToLocationManagement);
     }
 
     @Override

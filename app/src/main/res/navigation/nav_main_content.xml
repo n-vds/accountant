@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/nav_main"
+        app:startDestination="@id/bottomNavFragmentInsert">
+
+    <fragment
+            android:id="@+id/bottomNavFragmentDashboard"
+            android:name="com.accountant.accountant.DashboardFragment"/>
+
+    <fragment
+            android:id="@+id/bottomNavFragmentInsert"
+            android:name="com.accountant.accountant.InputFragment"/>
+
+    <fragment
+            android:id="@+id/bottomNavFragmentList"
+            android:name="com.accountant.accountant.DataListFragment"/>
+
+</navigation>
