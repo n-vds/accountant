@@ -2,68 +2,27 @@ package com.accountant.accountant;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainContentFragment extends Fragment {
-    private BottomNavigationView navbar;
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_main, container, false);
-
-        navbar = root.findViewById(R.id.navigation);
-        navbar.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
-        navbar.setSelectedItemId(R.id.action_insert);
-
-        return root;
+        return inflater.inflate(R.layout.fragment_main, container, false);
     }
 
-    void switchToData() {
-        navbar.setSelectedItemId(R.id.action_show_list);
-    }
-
-    private void switchDirectlyToData() {
-        getFragmentManager()
-                .beginTransaction()
-                .addToBackStack(null)
-                .replace(R.id.content, new DataListFragment())
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
-    }
-
-    private void switchDirectlyToInsert() {
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.content, new InputFragment())
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
-    }
-
-    private boolean onNavigationItemSelected(MenuItem item) {
-        if (item.getItemId() == navbar.getSelectedItemId()) {
-            // FIXME this only works as long as theres no deeper navigation
-            return false;
-        }
-
-        switch (item.getItemId()) {
-            case R.id.action_home:
-                break;
-            case R.id.action_insert:
-                switchDirectlyToInsert();
-                break;
-            case R.id.action_show_list:
-                switchDirectlyToData();
-                break;
-        }
-
-        return true;
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        NavController navController = Navigation.findNavController(requireActivity(), R.id.content);
+        BottomNavigationView bottomNav = view.findViewById(R.id.navigation);
+        NavigationUI.setupWithNavController(bottomNav, navController);
     }
 }

@@ -9,6 +9,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.DistanceLocationEntity;
 import com.accountant.accountant.db.LocationEntity;
@@ -145,7 +146,8 @@ public class InputFragment extends Fragment {
         inputAmount = 0;
         handleAmountChange();
 
-        ((MainContentFragment) getParentFragment()).switchToData();
+        Navigation.findNavController(requireActivity(), R.id.content)
+                .navigate(R.id.bottomNavFragmentList);
     }
 
     private void onDelClick() {
