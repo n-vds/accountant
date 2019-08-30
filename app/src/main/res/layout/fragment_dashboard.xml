@@ -1,102 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.viewpager.widget.ViewPager
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
+        android:id="@+id/pager"
         android:layout_height="match_parent"
-        android:id="@+id/root">
+        android:layout_width="match_parent">
 
-    <TextView
-            android:text="Spending:"
-            android:textSize="25sp"
-            android:layout_width="wrap_content"
+    <com.google.android.material.tabs.TabLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginStart="24dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:id="@+id/tvSpending"
-            android:textStyle="bold"/>
+            android:layout_gravity="top"/>
 
-    <TextView
-            android:text="this month:"
-            android:textSize="20sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/tvSpending"
-            app:layout_constraintLeft_toLeftOf="@id/tvSpending"
-            android:id="@+id/tvThisMonth"/>
-
-    <TextView
-            android:id="@+id/tvLastThirtyDays"
-            android:text="last 30 days:"
-            android:textSize="20sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/tvThisMonth"
-            app:layout_constraintLeft_toLeftOf="@id/tvThisMonth"/>
-
-    <TextView
-            android:text="Monthly average:"
-            android:textSize="20sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/tvMonthlyAvg"
-            app:layout_constraintStart_toStartOf="@+id/tvLastThirtyDays"
-            app:layout_constraintTop_toBottomOf="@id/tvLastThirtyDays"
-            android:layout_marginTop="25dp"/>
-
-    <androidx.constraintlayout.widget.Barrier
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/barrier1"
-            app:barrierDirection="end"
-            app:constraint_referenced_ids="tvThisMonth,tvLastThirtyDays,tvMonthlyAvg"/>
-
-
-    <TextView
-            android:text="125€"
-            android:textSize="20sp"
-            android:layout_marginStart="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBaseline_toBaselineOf="@id/tvThisMonth"
-            app:layout_constraintLeft_toRightOf="@id/barrier1"
-            android:id="@+id/dataThisMonth"/>
-
-    <TextView
-            android:text="235 €"
-            android:textSize="20sp"
-            android:layout_marginStart="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBaseline_toBaselineOf="@id/tvLastThirtyDays"
-            app:layout_constraintStart_toEndOf="@id/barrier1"
-            android:id="@+id/dataLastThirtyDays"/>
-
-    <TextView
-            android:text="20 €"
-            android:textSize="20sp"
-            android:layout_marginStart="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/dataMonthlyAvg"
-            app:layout_constraintStart_toEndOf="@id/barrier1"
-            app:layout_constraintBaseline_toBaselineOf="@id/tvMonthlyAvg"/>
-
-    <!-- *************** Months *********************** -->
-
-    <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/listMonthData"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="30dp"
-            android:scrollbars="vertical"
-            app:layout_constraintTop_toBottomOf="@id/tvMonthlyAvg"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.viewpager.widget.ViewPager>
