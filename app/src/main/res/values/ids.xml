@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="january" />
+    <item type="id" name="february" />
+    <item type="id" name="march" />
+    <item type="id" name="april" />
+    <item type="id" name="may" />
+    <item type="id" name="june" />
+    <item type="id" name="july" />
+    <item type="id" name="august" />
+    <item type="id" name="september" />
+    <item type="id" name="october" />
+    <item type="id" name="november" />
+    <item type="id" name="december" />
+</resources>

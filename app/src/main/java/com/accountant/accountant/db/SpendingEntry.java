@@ -7,4 +7,5 @@ public final class SpendingEntry {
     public static final String COLUMN_ID = "id";
     public static final String COLUMN_AMOUNT = "amount";
     public static final String COLUMN_DATE = "date";
+    public static final String COLUMN_MONTH = "month";
 }
