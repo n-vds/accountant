@@ -7,7 +7,7 @@
         android:id="@+id/root">
 
     <TextView
-            android:text="Spending:"
+            android:text="Average spending:"
             android:textSize="25sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
