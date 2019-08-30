@@ -138,7 +138,7 @@ public class InputFragment extends Fragment {
 
         Database db = activity.getDatabase();
         if (knownLocation == null) {
-            db.insert(inputAmount * 100);
+            db.insert(inputAmount * 100, null);
         } else {
             db.insert(inputAmount * 100, knownLocation.tag);
         }

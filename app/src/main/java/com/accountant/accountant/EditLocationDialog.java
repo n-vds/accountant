@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,8 +15,6 @@ import androidx.fragment.app.Fragment;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.LocationEntity;
 import com.accountant.accountant.db.TagList;
-
-import java.util.Collection;
 
 public class EditLocationDialog extends DialogFragment {
     private LocationProvider locationProvider;
@@ -167,26 +164,24 @@ public class EditLocationDialog extends DialogFragment {
         EditTagsDialog dialog = new EditTagsDialog();
 
         Bundle args = new Bundle();
-        args.putBoolean(EditTagsDialog.ARG_ONLY_SINGLE_TAG, true);
         if (selectedTag == null) {
-            args.putLongArray(EditTagsDialog.ARG_CHECKED_TAGS, new long[]{});
+            args.putBoolean(EditTagsDialog.ARG_HAS_CHECKED_TAG, false);
         } else {
-            args.putLongArray(EditTagsDialog.ARG_CHECKED_TAGS, new long[]{selectedTag});
+            args.putBoolean(EditTagsDialog.ARG_HAS_CHECKED_TAG, true);
+            args.putLong(EditTagsDialog.ARG_CHECKED_TAG, selectedTag);
         }
         dialog.setArguments(args);
         dialog.setTargetFragment(this, 0);
         dialog.show(getFragmentManager(), "locationedittags");
     }
 
-    public void updateTags(Collection<Long> selectedTags) {
-        if (selectedTags.size() == 0) {
-            selectedTag = null;
+    public void updateTag(Long selectedTag) {
+        if (selectedTag == null) {
+            this.selectedTag = null;
             vListTags.setText("<Not tag>");
-        } else if (selectedTags.size() == 1) {
-            selectedTag = selectedTags.iterator().next();
-            vListTags.setText(tagList.getName(selectedTag));
         } else {
-            Log.e(EditLocationDialog.class.getSimpleName(), "updateTags called with > 1 selected tags");
+            this.selectedTag = selectedTag;
+            vListTags.setText(tagList.getName(selectedTag));
         }
     }
 }

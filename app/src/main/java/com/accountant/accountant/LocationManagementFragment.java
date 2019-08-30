@@ -25,7 +25,7 @@ public class LocationManagementFragment extends ListFragment {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 R.layout.location_row,
                 db.queryAllLocations(),
-                new String[]{LocationEntry.COLUMN_DESC, LocationEntry.COLUMN_LAT, LocationEntry.COLUMN_LON, LocationEntry.COLUMN_TAG},
+                new String[]{LocationEntry.DESC, LocationEntry.LAT, LocationEntry.LON, LocationEntry.TAG},
                 new int[]{R.id.desc, R.id.lat, R.id.lon, R.id.tags}, 0);
 
         setListAdapter(adapter);

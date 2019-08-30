@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.ListFragment;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntry;
+import com.accountant.accountant.db.TagEntry;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -33,23 +34,23 @@ public class DataListFragment extends ListFragment {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 R.layout.data_list_row,
                 db.queryDataForUserView(),
-                new String[]{SpendingEntry.COLUMN_DATE, SpendingEntry.COLUMN_AMOUNT, Database.COLUMN_TAG_LIST},
+                new String[]{SpendingEntry.DATE, SpendingEntry.AMOUNT, TagEntry.NAME},
                 new int[]{R.id.date, R.id.amount, R.id.listTags}, 0);
 
         adapter.setViewBinder((view, cursor, columnIndex) -> {
             TextView v = (TextView) view;
 
-            if (columnIndex == cursor.getColumnIndex(SpendingEntry.COLUMN_DATE)) {
+            if (columnIndex == cursor.getColumnIndex(SpendingEntry.DATE)) {
                 long date = cursor.getLong(columnIndex);
                 v.setText(DATE_FORMAT.format(new Date(date)));
-            } else if (columnIndex == cursor.getColumnIndex(SpendingEntry.COLUMN_AMOUNT)) {
+            } else if (columnIndex == cursor.getColumnIndex(SpendingEntry.AMOUNT)) {
                 v.setText((cursor.getInt(columnIndex) / 100) + " €");
-            } else if (columnIndex == cursor.getColumnIndex(Database.COLUMN_TAG_LIST)) {
-                String tags = cursor.getString(columnIndex);
-                if (tags == null || tags.isEmpty()) {
-                    v.setText("Click to add tags");
+            } else if (columnIndex == cursor.getColumnIndex(TagEntry.NAME)) {
+                String tagName = cursor.getString(columnIndex);
+                if (tagName == null || tagName.isEmpty()) {
+                    v.setText("");
                 } else {
-                    v.setText(tags);
+                    v.setText(tagName);
                 }
             } else {
                 return false;

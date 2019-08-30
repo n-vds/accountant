@@ -8,33 +8,36 @@ import androidx.fragment.app.Fragment;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.TagList;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class EditTagsDialog extends DialogFragment {
-    public static final String ARG_ONLY_SINGLE_TAG = "onlySingle";
-    public static final String ARG_CHECKED_TAGS = "checked";
+    public static final String ARG_MUST_SELECT = "must_select";
+    public static final String ARG_HAS_CHECKED_TAG = "has_tag";
+    public static final String ARG_CHECKED_TAG = "checked";
 
-    private Set<Long> selectedTags;
+    private Long selectedTag;
     private List<Long> ids;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Bundle args = getArguments();
-        boolean selectSingleTag = args.getBoolean(ARG_ONLY_SINGLE_TAG, false);
+        boolean mustSelect = args.getBoolean(ARG_MUST_SELECT);
 
-        long[] checkedTagIds = args.getLongArray(ARG_CHECKED_TAGS);
-
-        selectedTags = new HashSet<>();
-        for (long tagId : checkedTagIds) {
-            selectedTags.add(tagId);
+        if (args.getBoolean(ARG_HAS_CHECKED_TAG, false)) {
+            selectedTag = args.getLong(ARG_CHECKED_TAG);
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Set tags");
+        builder.setTitle("Select tag");
 
-        createTagList(builder, selectSingleTag);
+        Database db = ((MainActivity) requireActivity()).getDatabase();
+        TagList tagList = db.queryTagList();
+        if (mustSelect) {
+            createTagListMustSelect(builder, tagList);
+        } else {
+            createTagList(builder, tagList);
+        }
 
         builder.setPositiveButton(android.R.string.ok, (_v, _i) -> {
             onOkClick();
@@ -44,58 +47,84 @@ public class EditTagsDialog extends DialogFragment {
         return builder.create();
     }
 
-    private void createTagList(AlertDialog.Builder builder, boolean singleOnly) {
-        Database db = ((MainActivity) getActivity()).getDatabase();
-
-        TagList tagList = db.queryTagList();
+    private void createTagList(AlertDialog.Builder builder, TagList tagList) {
         int count = tagList.getCount();
 
-        CharSequence[] items = tagList.getNames().toArray(new CharSequence[count]);
+        List<String> tagNames = tagList.getNames();
+        CharSequence[] items = new CharSequence[tagNames.size() + 1];
+        items[0] = "<No tag>";
+        for (int i = 1; i < count + 1; i++) {
+            items[i] = tagNames.get(i - 1);
+        }
+        ids = new ArrayList<>(tagList.getIds());
+        ids.add(0, -1L);
+
+        boolean[] checked = new boolean[count + 1];
+        int checkedItem = -1;
+
+        if (selectedTag != null) {
+            for (int i = 1; i < ids.size(); i++) {
+                checked[i] = (long) selectedTag == ids.get(i);
+                if (checked[i]) {
+                    checkedItem = i;
+                }
+            }
+        } else {
+            checkedItem = 0;
+        }
+
+        builder.setSingleChoiceItems(items, checkedItem, (_d, i) -> {
+            onTagClickedSingle(i);
+        });
+    }
+
+    private void createTagListMustSelect(AlertDialog.Builder builder, TagList tagList) {
+        int count = tagList.getCount();
+
+        List<String> tagNames = tagList.getNames();
+        CharSequence[] items = new CharSequence[tagNames.size()];
+        for (int i = 0; i < tagNames.size(); i++) {
+            items[i] = tagNames.get(i);
+        }
         ids = tagList.getIds();
 
         boolean[] checked = new boolean[count];
         int checkedItem = -1;
 
-        for (int i = 0; i < ids.size(); i++) {
-            checked[i] = selectedTags.contains(ids.get(i));
-            if (checked[i]) {
-                checkedItem = i;
+        if (selectedTag != null) {
+            for (int i = 1; i < ids.size(); i++) {
+                checked[i] = (long) selectedTag == ids.get(i);
+                if (checked[i]) {
+                    checkedItem = i;
+                }
             }
         }
 
-        if (singleOnly) {
-            builder.setSingleChoiceItems(items, checkedItem, (_d, i) -> {
-                onTagClickedSingle(i);
-            });
-        } else {
-            builder.setMultiChoiceItems(items, checked, (_d, which, isChecked) -> {
-                onTagClickedMulti(which, isChecked);
-            });
-        }
+        builder.setSingleChoiceItems(items, checkedItem, (_d, i) -> {
+            onTagClickedSingle(i);
+        });
     }
 
     private void onTagClickedSingle(int i) {
-        long id = ids.get(i);
-        selectedTags.clear();
-        selectedTags.add(id);
-    }
+        boolean mustSelect = getArguments().getBoolean(ARG_MUST_SELECT);
 
-    private void onTagClickedMulti(int i, boolean isChecked) {
-        long id = ids.get(i);
-
-        if (isChecked) {
-            selectedTags.add(id);
+        if (mustSelect) {
+            selectedTag = ids.get(i);
         } else {
-            selectedTags.remove(id);
+            if (i == 0) {
+                selectedTag = null;
+            } else {
+                selectedTag = ids.get(i);
+            }
         }
     }
 
     private void onOkClick() {
         Fragment target = getTargetFragment();
         if (target instanceof EditDataDialog) {
-            ((EditDataDialog) target).updateTags(selectedTags);
+            ((EditDataDialog) target).updateTag(selectedTag);
         } else if (target instanceof EditLocationDialog) {
-            ((EditLocationDialog) target).updateTags(selectedTags);
+            ((EditLocationDialog) target).updateTag(selectedTag);
         }
     }
 }

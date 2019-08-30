@@ -27,7 +27,7 @@ public class TagManagementFragment extends ListFragment {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 android.R.layout.simple_list_item_1,
                 db.queryAllTagNames(),
-                new String[]{TagEntry.COLUMN_NAME},
+                new String[]{TagEntry.NAME},
                 new int[]{android.R.id.text1}, 0);
 
         setListAdapter(adapter);

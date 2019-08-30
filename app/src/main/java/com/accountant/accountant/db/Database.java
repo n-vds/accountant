@@ -8,11 +8,8 @@ import android.database.sqlite.SQLiteStatement;
 
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 
 public class Database {
-    public static final String COLUMN_TAG_LIST = "tag_list";
-
     private DbHelper helper;
 
     public Database(Context ctx) {
@@ -24,39 +21,21 @@ public class Database {
      *
      * @param spending the amount spent
      */
-    public void insert(int spending, long... tags) {
+    public void insert(int spending, Long tag) {
         SQLiteDatabase db = helper.getWritableDatabase();
 
-        long now = System.currentTimeMillis();
+        long now = Calendar.getInstance().getTimeInMillis();
         int month = Calendar.getInstance().get(Calendar.MONTH);
 
         db.beginTransaction();
         try {
             ContentValues values = new ContentValues(1);
-            values.put(SpendingEntry.COLUMN_AMOUNT, spending);
-            values.put(SpendingEntry.COLUMN_DATE, now);
-            values.put(SpendingEntry.COLUMN_MONTH, month);
-            long rowId = db.insert(SpendingEntry.TABLE_NAME, null, values);
+            values.put(SpendingEntry.AMOUNT, spending);
+            values.put(SpendingEntry.DATE, now);
+            values.put(SpendingEntry.MONTH, month);
+            values.put(SpendingEntry.TAG, tag);
+            db.insert(SpendingEntry.TABLE_NAME, null, values);
 
-            if (tags != null && tags.length > 0) {
-                StringBuilder tagValuesString = new StringBuilder();
-
-                for (int i = 0; i < tags.length; i++) {
-                    if (i != 0) {
-                        tagValuesString.append(' ').append(',');
-                    }
-                    tagValuesString.append('(');
-                    tagValuesString.append(rowId);
-                    tagValuesString.append(',').append(' ');
-                    tagValuesString.append(tags[i]);
-                    tagValuesString.append(')');
-                }
-
-                db.execSQL("INSERT INTO " + TagSpendingEntry.TABLE_NAME + " (" +
-                        TagSpendingEntry.COLUMN_SPENDING + ", " +
-                        TagSpendingEntry.COLUMN_TAG + ") " +
-                        "VALUES " + tagValuesString);
-            }
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -72,39 +51,40 @@ public class Database {
         calendar.add(Calendar.DAY_OF_MONTH, -30);
         long thirtyDaysAgo = calendar.getTimeInMillis();
 
+        String sqlBetween = "SELECT " +
+                "SUM(" + SpendingEntry.AMOUNT + ") " +
+                "FROM " + SpendingEntry.TABLE_NAME + " " +
+                "WHERE " + SpendingEntry.DATE + " >= ? AND " +
+                SpendingEntry.DATE + " <= ?";
+
+
         db.beginTransaction();
         try {
-            String sqlBetween = "SELECT " +
-                    "SUM(" + SpendingEntry.COLUMN_AMOUNT + ") " +
-                    "FROM " + SpendingEntry.TABLE_NAME + " " +
-                    "WHERE " + SpendingEntry.COLUMN_DATE + " >= ? AND " +
-                    SpendingEntry.COLUMN_DATE + " <= ?";
-
             Cursor c = db.rawQuery(sqlBetween, new String[]{String.valueOf(thirtyDaysAgo), String.valueOf(now)});
             c.moveToFirst();
             int spentLastThirtyDays = c.getInt(0);
             c.close();
 
             String sqlThisMonth = "SELECT " +
-                    "SUM(" + SpendingEntry.COLUMN_AMOUNT + ") " +
+                    "SUM(" + SpendingEntry.AMOUNT + ") " +
                     "FROM " + SpendingEntry.TABLE_NAME + " " +
-                    "WHERE " + SpendingEntry.COLUMN_MONTH + " = ?";
+                    "WHERE " + SpendingEntry.MONTH + " = ?";
             c = db.rawQuery(sqlThisMonth, new String[]{String.valueOf(month)});
             c.moveToFirst();
             int spentThisMonth = c.getInt(0);
             c.close();
 
             String avgMonth = "SELECT " +
-                    "AVG(" + SpendingEntry.COLUMN_AMOUNT + ") AS avg, " +
-                    SpendingEntry.COLUMN_MONTH + " " +
+                    "AVG(" + SpendingEntry.AMOUNT + ") AS avg, " +
+                    SpendingEntry.MONTH + " " +
                     "FROM " + SpendingEntry.TABLE_NAME + " " +
-                    "GROUP BY " + SpendingEntry.COLUMN_MONTH;
+                    "GROUP BY " + SpendingEntry.MONTH;
             c = db.rawQuery(avgMonth, null);
 
             float[] avgValues = new float[12];
             Arrays.fill(avgValues, Float.NaN);
 
-            int idxMonth = c.getColumnIndex(SpendingEntry.COLUMN_MONTH);
+            int idxMonth = c.getColumnIndex(SpendingEntry.MONTH);
             int idxAvg = c.getColumnIndex("avg");
 
             float sumOfMonthAvg = 0f;
@@ -136,19 +116,16 @@ public class Database {
         SQLiteDatabase db = helper.getReadableDatabase();
 
         String sql = "SELECT " +
-                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID + " AS _id," +
-                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_AMOUNT + "," +
-                SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + "," +
-                "group_concat(" + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_NAME + ", ', ') AS " + Database.COLUMN_TAG_LIST +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.ID + " AS _id," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.AMOUNT + "," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.DATE + "," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.TAG + "," +
+                TagEntry.TABLE_NAME + "." + TagEntry.NAME +
                 " FROM " + SpendingEntry.TABLE_NAME +
-                " LEFT JOIN " + TagSpendingEntry.TABLE_NAME +
-                " ON " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID +
-                " = " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_SPENDING +
                 " LEFT JOIN " + TagEntry.TABLE_NAME +
-                " ON " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_TAG +
-                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
-                " GROUP BY " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_ID +
-                " ORDER BY " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.COLUMN_DATE + " DESC";
+                " ON " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.ID +
+                " ORDER BY " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.DATE + " DESC";
 
         return db.rawQuery(sql, null);
     }
@@ -158,41 +135,35 @@ public class Database {
         db.beginTransaction();
 
         // TODO refactor, very similar to queryDataForUserView
-        try {
-            String sql = "SELECT " + SpendingEntry.COLUMN_AMOUNT + ", " + SpendingEntry.COLUMN_DATE +
-                    " FROM " + SpendingEntry.TABLE_NAME +
-                    " WHERE " + SpendingEntry.COLUMN_ID + " = ?";
+        String sql = "SELECT " +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.ID + " AS _id," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.AMOUNT + "," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.DATE + "," +
+                SpendingEntry.TABLE_NAME + "." + SpendingEntry.TAG + "," +
+                TagEntry.TABLE_NAME + "." + TagEntry.NAME +
+                " FROM " + SpendingEntry.TABLE_NAME +
+                " LEFT JOIN " + TagEntry.TABLE_NAME +
+                " ON " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.ID +
+                " WHERE " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.ID + " = ?";
 
-            Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(id)});
+        try (Cursor cursor = db.rawQuery(sql, new String[]{String.valueOf(id)})) {
             if (cursor.getCount() == 0) {
                 return null;
             }
             cursor.moveToFirst();
-            long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(SpendingEntry.COLUMN_DATE));
-            int amount = cursor.getInt(cursor.getColumnIndexOrThrow(SpendingEntry.COLUMN_AMOUNT));
-            cursor.close();
 
-            String sqlTags = "SELECT " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID + " AS tag_id, " +
-                    TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_NAME + " AS tag_name" +
-                    " FROM " + TagSpendingEntry.TABLE_NAME +
-                    " LEFT JOIN " + TagEntry.TABLE_NAME +
-                    " ON " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_TAG +
-                    " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
-                    " WHERE " + TagSpendingEntry.TABLE_NAME + "." + TagSpendingEntry.COLUMN_SPENDING +
-                    " = ?";
+            long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(SpendingEntry.DATE));
 
-            cursor = db.rawQuery(sqlTags, new String[]{String.valueOf(id)});
-            cursor.moveToFirst();
+            int amount = cursor.getInt(cursor.getColumnIndexOrThrow(SpendingEntry.AMOUNT));
 
-            long[] tagIds = new long[cursor.getCount()];
-            String[] tagNames = new String[cursor.getCount()];
-            for (int i = 0; i < tagIds.length; i++) {
-                tagIds[i] = cursor.getLong(cursor.getColumnIndexOrThrow("tag_id"));
-                tagNames[i] = cursor.getString(cursor.getColumnIndexOrThrow("tag_name"));
-                cursor.moveToNext();
-            }
-            cursor.close();
-            return new SpendingEntity(id, timestamp, amount, tagIds, tagNames);
+            int columnTag = cursor.getColumnIndex(SpendingEntry.TAG);
+            Long tagId = cursor.isNull(columnTag) ? null :
+                    cursor.getLong(columnTag);
+
+            String tagName = cursor.getString(cursor.getColumnIndex(TagEntry.NAME));
+
+            return new SpendingEntity(id, timestamp, amount, tagId, tagName);
         } finally {
             db.setTransactionSuccessful();
             db.endTransaction();
@@ -202,46 +173,48 @@ public class Database {
 
     public Cursor queryAllTagNames() {
         SQLiteDatabase db = helper.getReadableDatabase();
-        return db.rawQuery("SELECT " + TagEntry.COLUMN_NAME + ", " +
-                TagEntry.COLUMN_ID + " AS _id, " +
-                TagEntry.COLUMN_ID +
+        return db.rawQuery("SELECT " + TagEntry.NAME + ", " +
+                TagEntry.ID + " AS _id, " +
+                TagEntry.ID +
                 " FROM " + TagEntry.TABLE_NAME +
-                " ORDER BY " + TagEntry.COLUMN_ID, null);
+                " ORDER BY " + TagEntry.ID, null);
     }
 
     public TagList queryTagList() {
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT " + TagEntry.COLUMN_NAME + ", " +
-                TagEntry.COLUMN_ID + " AS _id, " +
-                TagEntry.COLUMN_ID +
+
+        try (Cursor cursor = db.rawQuery("SELECT " + TagEntry.NAME + ", " +
+                TagEntry.ID + " AS _id, " +
+                TagEntry.ID +
                 " FROM " + TagEntry.TABLE_NAME +
-                " ORDER BY " + TagEntry.COLUMN_ID, null);
+                " ORDER BY " + TagEntry.ID, null)) {
 
-        if (cursor.getCount() == 0) {
-            return new TagList();
+            if (cursor.getCount() == 0) {
+                return new TagList();
+            }
+
+            cursor.moveToFirst();
+            int columnId = cursor.getColumnIndexOrThrow(TagEntry.ID);
+            int columnName = cursor.getColumnIndexOrThrow(TagEntry.NAME);
+
+            String[] tagNames = new String[cursor.getCount()];
+            long[] tagIds = new long[cursor.getCount()];
+
+            for (int i = 0; i < cursor.getCount(); i++) {
+                tagNames[i] = cursor.getString(columnName);
+                tagIds[i] = cursor.getLong(columnId);
+                cursor.moveToNext();
+            }
+
+            TagList list = new TagList(tagIds, tagNames);
+            return list;
         }
-
-        cursor.moveToFirst();
-        int columnId = cursor.getColumnIndexOrThrow(TagEntry.COLUMN_ID);
-        int columnName = cursor.getColumnIndexOrThrow(TagEntry.COLUMN_NAME);
-
-        String[] tagNames = new String[cursor.getCount()];
-        long[] tagIds = new long[cursor.getCount()];
-
-        for (int i = 0; i < cursor.getCount(); i++) {
-            tagNames[i] = cursor.getString(columnName);
-            tagIds[i] = cursor.getLong(columnId);
-            cursor.moveToNext();
-        }
-
-        TagList list = new TagList(tagIds, tagNames);
-        return list;
     }
 
     public long insertTag(String tagName) {
         SQLiteDatabase db = helper.getWritableDatabase();
         SQLiteStatement stmt = db.compileStatement("INSERT INTO " + TagEntry.TABLE_NAME +
-                " (" + TagEntry.COLUMN_NAME + ") VALUES (?)");
+                " (" + TagEntry.NAME + ") VALUES (?)");
         stmt.bindString(1, tagName);
         return stmt.executeInsert();
     }
@@ -249,29 +222,29 @@ public class Database {
     public Cursor queryAllLocations() {
         SQLiteDatabase db = helper.getReadableDatabase();
         return db.rawQuery(
-                "SELECT " + LocationEntry.COLUMN_ID + " AS _id, " +
-                        LocationEntry.COLUMN_DESC + ", " +
-                        LocationEntry.COLUMN_LAT + ", " +
-                        LocationEntry.COLUMN_LON + ", " +
-                        LocationEntry.COLUMN_TAG +
+                "SELECT " + LocationEntry.ID + " AS _id, " +
+                        LocationEntry.DESC + ", " +
+                        LocationEntry.LAT + ", " +
+                        LocationEntry.LON + ", " +
+                        LocationEntry.TAG +
                         " FROM " + LocationEntry.TABLE_NAME +
-                        " ORDER BY " + LocationEntry.COLUMN_ID + " DESC", null);
+                        " ORDER BY " + LocationEntry.ID + " DESC", null);
     }
 
     public LocationEntity queryLocation(long id) {
         SQLiteDatabase db = helper.getReadableDatabase();
         Cursor c = db.rawQuery("" +
-                "SELECT " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " AS _id, " +
-                LocationEntry.COLUMN_DESC + ", " +
-                LocationEntry.COLUMN_LAT + ", " +
-                LocationEntry.COLUMN_LON + ", " +
-                LocationEntry.COLUMN_TAG + ", " +
-                TagEntry.COLUMN_NAME +
+                "SELECT " + LocationEntry.TABLE_NAME + "." + LocationEntry.ID + " AS _id, " +
+                LocationEntry.DESC + ", " +
+                LocationEntry.LAT + ", " +
+                LocationEntry.LON + ", " +
+                LocationEntry.TAG + ", " +
+                TagEntry.NAME +
                 " FROM " + LocationEntry.TABLE_NAME +
                 " LEFT JOIN " + TagEntry.TABLE_NAME +
-                " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_TAG +
-                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
-                " WHERE " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+                " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.ID +
+                " WHERE " + LocationEntry.TABLE_NAME + "." + LocationEntry.ID + " = ?", new String[]{String.valueOf(id)});
 
         if (c.getCount() == 0) {
             return null;
@@ -279,11 +252,11 @@ public class Database {
         c.moveToFirst();
 
         LocationEntity entity = new LocationEntity(
-                c.getString(c.getColumnIndex(LocationEntry.COLUMN_DESC)),
-                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LAT)),
-                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LON)),
-                c.getLong(c.getColumnIndex(LocationEntry.COLUMN_TAG)),
-                c.getString(c.getColumnIndex(TagEntry.COLUMN_NAME)));
+                c.getString(c.getColumnIndex(LocationEntry.DESC)),
+                c.getDouble(c.getColumnIndex(LocationEntry.LAT)),
+                c.getDouble(c.getColumnIndex(LocationEntry.LON)),
+                c.getLong(c.getColumnIndex(LocationEntry.TAG)),
+                c.getString(c.getColumnIndex(TagEntry.NAME)));
 
         return entity;
     }
@@ -291,17 +264,17 @@ public class Database {
     public DistanceLocationEntity resolveLocation(double lat, double lon) {
         SQLiteDatabase db = helper.getReadableDatabase();
         Cursor c = db.rawQuery("" +
-                "SELECT " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_ID + " AS _id, " +
-                LocationEntry.COLUMN_DESC + ", " +
-                LocationEntry.COLUMN_LAT + ", " +
-                LocationEntry.COLUMN_LON + ", " +
-                LocationEntry.COLUMN_TAG + ", " +
-                TagEntry.COLUMN_NAME + ", " +
-                "(abs(" + LocationEntry.COLUMN_LAT + " - ?) * abs(" + LocationEntry.COLUMN_LON + " - ?)) AS distanceSq" +
+                "SELECT " + LocationEntry.TABLE_NAME + "." + LocationEntry.ID + " AS _id, " +
+                LocationEntry.DESC + ", " +
+                LocationEntry.LAT + ", " +
+                LocationEntry.LON + ", " +
+                LocationEntry.TAG + ", " +
+                TagEntry.NAME + ", " +
+                "(abs(" + LocationEntry.LAT + " - ?) * abs(" + LocationEntry.LON + " - ?)) AS distanceSq" +
                 " FROM " + LocationEntry.TABLE_NAME +
                 " LEFT JOIN " + TagEntry.TABLE_NAME +
-                " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.COLUMN_TAG +
-                " = " + TagEntry.TABLE_NAME + "." + TagEntry.COLUMN_ID +
+                " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.TAG +
+                " = " + TagEntry.TABLE_NAME + "." + TagEntry.ID +
                 " ORDER BY distanceSq ASC", new String[]{
                 String.valueOf(lat), String.valueOf(lon)
         });
@@ -312,11 +285,11 @@ public class Database {
         c.moveToFirst();
 
         LocationEntity entity = new LocationEntity(
-                c.getString(c.getColumnIndex(LocationEntry.COLUMN_DESC)),
-                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LAT)),
-                c.getDouble(c.getColumnIndex(LocationEntry.COLUMN_LON)),
-                c.getLong(c.getColumnIndex(LocationEntry.COLUMN_TAG)),
-                c.getString(c.getColumnIndex(TagEntry.COLUMN_NAME)));
+                c.getString(c.getColumnIndex(LocationEntry.DESC)),
+                c.getDouble(c.getColumnIndex(LocationEntry.LAT)),
+                c.getDouble(c.getColumnIndex(LocationEntry.LON)),
+                c.getLong(c.getColumnIndex(LocationEntry.TAG)),
+                c.getString(c.getColumnIndex(TagEntry.NAME)));
 
         double distance = coordinateDistance(lat, lon, entity.lat, entity.lon);
         return new DistanceLocationEntity(entity, distance);
@@ -348,10 +321,10 @@ public class Database {
     public void insertLocation(String desc, double lat, double lon, long tag) {
         SQLiteDatabase db = helper.getWritableDatabase();
         String sql = "INSERT INTO " + LocationEntry.TABLE_NAME + " (" +
-                LocationEntry.COLUMN_DESC + ", " +
-                LocationEntry.COLUMN_LAT + ", " +
-                LocationEntry.COLUMN_LON + ", " +
-                LocationEntry.COLUMN_TAG + ")" +
+                LocationEntry.DESC + ", " +
+                LocationEntry.LAT + ", " +
+                LocationEntry.LON + ", " +
+                LocationEntry.TAG + ")" +
                 " VALUES (?, ?, ?, ?)";
 
         SQLiteStatement stm = db.compileStatement(sql);
@@ -365,11 +338,11 @@ public class Database {
     public void updateLocation(long id, String desc, double lat, double lon, long tag) {
         SQLiteDatabase db = helper.getWritableDatabase();
         String sql = "UPDATE " + LocationEntry.TABLE_NAME + " SET " +
-                LocationEntry.COLUMN_DESC + " = ?, " +
-                LocationEntry.COLUMN_LAT + " = ?, " +
-                LocationEntry.COLUMN_LON + " = ?, " +
-                LocationEntry.COLUMN_TAG + " = ?" +
-                " WHERE " + LocationEntry.COLUMN_ID + " = ?";
+                LocationEntry.DESC + " = ?, " +
+                LocationEntry.LAT + " = ?, " +
+                LocationEntry.LON + " = ?, " +
+                LocationEntry.TAG + " = ?" +
+                " WHERE " + LocationEntry.ID + " = ?";
 
         SQLiteStatement stm = db.compileStatement(sql);
         stm.bindString(1, desc);
@@ -381,7 +354,7 @@ public class Database {
     }
 
 
-    public void updateEntry(long id, long date, int amount, Collection<Long> tagIds) {
+    public void updateEntry(long id, long date, int amount, Long tagId) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(date);
         int month = calendar.get(Calendar.MONTH);
@@ -389,27 +362,13 @@ public class Database {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
         try {
-            String sqlSpending = "UPDATE " + SpendingEntry.TABLE_NAME +
-                    " SET " + SpendingEntry.COLUMN_DATE + " = ?, " +
-                    SpendingEntry.COLUMN_AMOUNT + " = ?, " +
-                    SpendingEntry.COLUMN_MONTH + " = ? " +
-                    " WHERE " + SpendingEntry.COLUMN_ID + " = ?";
-            db.execSQL(sqlSpending, new Object[]{date, amount, month, id});
-
-            String sqlDeleteOldTags = "DELETE FROM " + TagSpendingEntry.TABLE_NAME +
-                    " WHERE " + TagSpendingEntry.COLUMN_SPENDING + " = ?";
-            db.execSQL(sqlDeleteOldTags, new Object[]{id});
-
-            SQLiteStatement sqlInsertTag = db.compileStatement("INSERT INTO " + TagSpendingEntry.TABLE_NAME +
-                    " (" + TagSpendingEntry.COLUMN_SPENDING + ", " + TagSpendingEntry.COLUMN_TAG + ")" +
-                    " VALUES (?, ?)");
-
-            for (long tagId : tagIds) {
-                // Index is 1 based
-                sqlInsertTag.bindLong(1, id);
-                sqlInsertTag.bindLong(2, tagId);
-                sqlInsertTag.execute();
-            }
+            String sqlSpending = "UPDATE " + SpendingEntry.TABLE_NAME + " SET " +
+                    SpendingEntry.DATE + " = ?, " +
+                    SpendingEntry.AMOUNT + " = ?, " +
+                    SpendingEntry.MONTH + " = ?, " +
+                    SpendingEntry.TAG + " = ? " +
+                    " WHERE " + SpendingEntry.ID + " = ?";
+            db.execSQL(sqlSpending, new Object[]{date, amount, month, tagId, id});
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
