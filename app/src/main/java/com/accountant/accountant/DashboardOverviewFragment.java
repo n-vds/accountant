@@ -15,6 +15,7 @@ public class DashboardOverviewFragment extends Fragment {
     private TextView tvThisMonth;
     private TextView tvLastThirtyDays;
     private TextView tvMonthlyAvg;
+    private TextView tvSpendingByTag;
 
     @Nullable
     @Override
@@ -27,6 +28,7 @@ public class DashboardOverviewFragment extends Fragment {
         tvThisMonth = view.findViewById(R.id.dataThisMonth);
         tvLastThirtyDays = view.findViewById(R.id.dataLastThirtyDays);
         tvMonthlyAvg = view.findViewById(R.id.dataMonthlyAvg);
+        tvSpendingByTag = view.findViewById(R.id.tvSpendingByTag);
     }
 
     @Override
@@ -37,5 +39,13 @@ public class DashboardOverviewFragment extends Fragment {
         tvThisMonth.setText(Math.round(stats.spentThisMonth / 100f) + " €");
         tvLastThirtyDays.setText(Math.round(stats.spentLastThirtyDays / 100f) + " €");
         tvMonthlyAvg.setText(Math.round(stats.spendingAvgMonth / 100f) + " €");
+        StringBuilder byTagString = new StringBuilder();
+        for (StatisticsEntity.SpendingByTagEntry entry : stats.spendingByTag) {
+            byTagString.append(entry.name == null ? "<No tag>" : entry.name).append(": ")
+                    .append(Math.round(entry.amount / 100f)).append(" €")
+                    .append(" (").append(Math.round(entry.percentage * 100)).append("%)")
+                    .append('\n');
+        }
+        tvSpendingByTag.setText(byTagString.toString());
     }
 }

@@ -6,8 +6,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 
 public class Database {
     private DbHelper helper;
@@ -103,9 +105,44 @@ public class Database {
 
             float avgInOneMonth = sumOfMonthAvg / (float) count;
 
+            int totalSpent = (int) db
+                    .compileStatement("SELECT SUM(" + SpendingEntry.AMOUNT + ") FROM " + SpendingEntry.TABLE_NAME)
+                    .simpleQueryForLong();
+
+
+            String sqlByTag = "SELECT " +
+                    "SUM(" + SpendingEntry.AMOUNT + " ) AS sum, " +
+                    SpendingEntry.TAG + ", " +
+                    TagEntry.NAME + " " +
+                    "FROM " + SpendingEntry.TABLE_NAME +
+                    " LEFT JOIN " + TagEntry.TABLE_NAME +
+                    " ON " + SpendingEntry.TABLE_NAME + "." + SpendingEntry.TAG +
+                    " = " + TagEntry.TABLE_NAME + "." + TagEntry.ID +
+                    " GROUP BY " + SpendingEntry.TAG;
+
+            c = db.rawQuery(sqlByTag, null);
+            List<StatisticsEntity.SpendingByTagEntry> byTagList = new ArrayList<>(c.getCount());
+            int columnSum = c.getColumnIndex("sum");
+            int columnTag = c.getColumnIndex(SpendingEntry.TAG);
+            int columnName = c.getColumnIndex(TagEntry.NAME);
+
+            if (c.getCount() > 0) {
+                c.moveToFirst();
+
+                for (int i = 0; i < c.getCount(); i++) {
+                    int sum = c.getInt(columnSum);
+                    long tag = c.getLong(columnTag);
+                    String name = c.getString(columnName);
+                    byTagList.add(new StatisticsEntity.SpendingByTagEntry(tag, name, sum, (float) sum / (float) totalSpent));
+                    c.moveToNext();
+                }
+            }
+
+            c.close();
+
             db.setTransactionSuccessful();
 
-            return new StatisticsEntity(spentThisMonth, spentLastThirtyDays, avgInOneMonth, avgValues);
+            return new StatisticsEntity(spentThisMonth, spentLastThirtyDays, avgInOneMonth, avgValues, byTagList);
         } finally {
             db.endTransaction();
         }

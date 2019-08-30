@@ -84,4 +84,14 @@
             app:layout_constraintStart_toEndOf="@id/barrier1"
             app:layout_constraintBaseline_toBaselineOf="@id/tvMonthlyAvg"/>
 
+    <TextView
+            android:text="By TAg"
+            android:textSize="20sp"
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/tvSpendingByTag"
+            app:layout_constraintTop_toBottomOf="@id/tvMonthlyAvg"
+            app:layout_constraintLeft_toLeftOf="@id/tvMonthlyAvg"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
