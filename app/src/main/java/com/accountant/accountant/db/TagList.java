@@ -9,6 +9,8 @@ public class TagList {
 
     public TagList() {
         nameById = new HashMap<>(0);
+        names = new ArrayList<>(0);
+        ids = new ArrayList<>(0);
     }
 
     public TagList(long[] tagIds, String[] tagNames) {

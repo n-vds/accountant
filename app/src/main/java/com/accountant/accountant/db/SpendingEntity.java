@@ -1,19 +1,17 @@
 package com.accountant.accountant.db;
 
-import java.util.Date;
-
 public class SpendingEntity {
     public final long id;
     public final long timestamp;
     public final int amount;
-    public long[] tagIds;
-    public String[] tagNames;
+    public Long tagId;
+    public String tagName;
 
-    public SpendingEntity(long id, long timestamp, int amount, long[] tags, String[] tagNames) {
+    public SpendingEntity(long id, long timestamp, int amount, Long tagId, String tagName) {
         this.id = id;
         this.timestamp = timestamp;
         this.amount = amount;
-        this.tagIds = tags;
-        this.tagNames = tagNames;
+        this.tagId = tagId;
+        this.tagName = tagName;
     }
 }

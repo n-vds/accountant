@@ -16,10 +16,7 @@ import com.accountant.accountant.db.TagList;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 public class EditDataDialog extends DialogFragment {
     private EditText vDate;
@@ -27,7 +24,7 @@ public class EditDataDialog extends DialogFragment {
     private Button vTags;
 
     private TagList tagList;
-    private Set<Long> selectedTagIds;
+    private Long selectedTag;
 
     private SpendingEntity originalData;
 
@@ -40,10 +37,7 @@ public class EditDataDialog extends DialogFragment {
         tagList = db.queryTagList();
         originalData = db.querySingle(id);
 
-        selectedTagIds = new HashSet<>();
-        for (long tag : originalData.tagIds) {
-            selectedTagIds.add(tag);
-        }
+        selectedTag = originalData.tagId;
 
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_editdata, null);
@@ -54,7 +48,7 @@ public class EditDataDialog extends DialogFragment {
         vDate.setText(DateFormat.getDateTimeInstance().format(new Date(originalData.timestamp)));
         vAmount.setText(String.valueOf(originalData.amount / 100));
 
-        vTags.setText(buildTagString());
+        vTags.setText(selectedTag == null ? "<No tag>" : tagList.getName(selectedTag));
         vTags.setOnClickListener((_v) -> onTagsClick());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -63,30 +57,6 @@ public class EditDataDialog extends DialogFragment {
         builder.setNegativeButton(android.R.string.cancel, (_d, _i) -> {
         });
         return builder.create();
-    }
-
-    private String buildTagString() {
-        if (selectedTagIds.isEmpty()) {
-            return "<No tags>";
-        }
-
-        StringBuilder b = new StringBuilder();
-        boolean first = true;
-        for (long tagId : selectedTagIds) {
-            if (!first) {
-                b.append(", ");
-            }
-
-            String tagName = tagList.getName(tagId);
-            if (tagName == null) {
-                b.append("<unknown #").append(tagId).append(">");
-            } else {
-                b.append(tagName);
-            }
-            first = false;
-        }
-
-        return b.toString();
     }
 
     private void onOkClick() {
@@ -101,7 +71,7 @@ public class EditDataDialog extends DialogFragment {
         }
         int amount = Integer.parseInt(vAmount.getText().toString()) * 100;
 
-        db.updateEntry(id, date, amount, selectedTagIds);
+        db.updateEntry(id, date, amount, selectedTag);
 
         // Notify caller
         Fragment fragment = getTargetFragment();
@@ -115,26 +85,19 @@ public class EditDataDialog extends DialogFragment {
         dialog.setTargetFragment(this, 0);
 
         Bundle args = new Bundle();
-        args.putBoolean(EditTagsDialog.ARG_ONLY_SINGLE_TAG, false);
-        args.putLongArray(EditTagsDialog.ARG_CHECKED_TAGS, toLongArray(selectedTagIds));
+        if (selectedTag != null) {
+            args.putBoolean(EditTagsDialog.ARG_HAS_CHECKED_TAG, true);
+            args.putLong(EditTagsDialog.ARG_CHECKED_TAG, selectedTag);
+        } else {
+            args.putBoolean(EditTagsDialog.ARG_HAS_CHECKED_TAG, false);
+        }
         dialog.setArguments(args);
 
         dialog.show(getFragmentManager(), "edittags");
     }
 
-    public void updateTags(Collection<Long> selectedTags) {
-        this.selectedTagIds.clear();
-        this.selectedTagIds.addAll(selectedTags);
-        vTags.setText(buildTagString());
-    }
-
-    private long[] toLongArray(Collection<Long> collection) {
-        long[] arr = new long[collection.size()];
-        int i = 0;
-        for (long l : collection) {
-            arr[i] = l;
-            i++;
-        }
-        return arr;
+    public void updateTag(Long tag) {
+        selectedTag = tag;
+        vTags.setText(selectedTag == null ? "<No tag>" : tagList.getName(tag));
     }
 }
