@@ -30,8 +30,9 @@ public class DashboardFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        ConstraintLayout root = (ConstraintLayout) inflater.inflate(R.layout.fragment_dashboard, container, false);
+        View root = inflater.inflate(R.layout.fragment_dashboard, container, false);
 
+        ConstraintLayout cl = root.findViewById(R.id.root);
         ConstraintSet constraints = new ConstraintSet();
 
         ViewGroup.LayoutParams params =
@@ -44,16 +45,16 @@ public class DashboardFragment extends Fragment {
             tvName.setId(View.generateViewId());
             tvName.setText(MONTH_NAMES[month] + ":");
             tvName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-            root.addView(tvName);
+            cl.addView(tvName);
             tvNamesIds[month] = tvName.getId();
 
             TextView tvData = new TextView(requireContext());
             tvData.setId(MONTH_IDS[month]);
             tvData.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-            root.addView(tvData);
+            cl.addView(tvData);
         }
 
-        constraints.clone(root);
+        constraints.clone(cl);
 
         for (int month = 0; month < 12; month++) {
             constraints.connect(tvNamesIds[month], ConstraintSet.START, R.id.tvMonthlyAvg, ConstraintSet.START);
@@ -66,7 +67,7 @@ public class DashboardFragment extends Fragment {
                 constraints.connect(MONTH_IDS[month], ConstraintSet.TOP, MONTH_IDS[month - 1], ConstraintSet.BOTTOM);
             }
         }
-        constraints.applyTo(root);
+        constraints.applyTo(cl);
 
         return root;
     }
