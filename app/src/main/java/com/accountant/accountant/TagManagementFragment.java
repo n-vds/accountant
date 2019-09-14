@@ -8,10 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.CursorAdapter;
-import android.widget.EditText;
-import android.widget.SimpleCursorAdapter;
-import android.widget.Toast;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.ListFragment;
@@ -44,16 +41,61 @@ public class TagManagementFragment extends ListFragment {
         return root;
     }
 
+    @Override
+    public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id) {
+        showNameDialog(true, id, ((TextView) v).getText().toString());
+    }
+
     private void onAddClick() {
+        showNameDialog(false, 0, null);
+    }
+
+    private void addTag(String tagName) {
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        db.insertTag(tagName);
+
+        reload();
+    }
+
+    private void editTag(long id, String newTagName) {
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        db.editTagName(id, newTagName);
+
+        reload();
+    }
+
+    private void reload() {
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        CursorAdapter adapter = ((CursorAdapter) getListAdapter());
+        adapter.changeCursor(db.queryAllTagNames());
+        adapter.notifyDataSetChanged();
+    }
+
+    private void showNameDialog(boolean edit, long id, String oldName) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Add a new tag");
+        builder.setTitle(edit ? "Edit tag" : "Add a new tag");
 
         EditText input = new EditText(getActivity());
         input.setHint("Name");
+        if (edit) {
+            input.setText(oldName);
+            input.setSelection(0, oldName.length()); // stop is exclusive
+        }
         builder.setView(input);
 
         builder.setPositiveButton(android.R.string.ok, (_d, _i) -> {
-            addTag(input.getText().toString());
+            String tagName = input.getText().toString();
+
+            if (tagName.isEmpty()) {
+                Toast.makeText(getActivity(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (edit) {
+                editTag(id, tagName);
+            } else {
+                addTag(tagName);
+            }
         });
 
         builder.setNegativeButton(android.R.string.cancel, (_d, i_) -> {
@@ -66,19 +108,5 @@ public class TagManagementFragment extends ListFragment {
             InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
         });
-    }
-
-    private void addTag(String tagName) {
-        if (tagName.isEmpty()) {
-            Toast.makeText(getActivity(), "Can't add empty tag", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Database db = ((MainActivity) getActivity()).getDatabase();
-        db.insertTag(tagName);
-
-        CursorAdapter adapter = ((CursorAdapter) getListAdapter());
-        adapter.changeCursor(db.queryAllTagNames());
-        adapter.notifyDataSetChanged();
     }
 }

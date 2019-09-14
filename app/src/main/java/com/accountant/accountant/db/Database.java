@@ -256,6 +256,13 @@ public class Database {
         return stmt.executeInsert();
     }
 
+    public void editTagName(long id, String newTagName) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.execSQL("UPDATE " + TagEntry.TABLE_NAME +
+                " SET " + TagEntry.NAME + " = ?" +
+                " WHERE " + TagEntry.ID + " = ?", new Object[]{newTagName, id});
+    }
+
     public Cursor queryAllLocations() {
         SQLiteDatabase db = helper.getReadableDatabase();
         return db.rawQuery(
