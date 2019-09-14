@@ -1,10 +1,13 @@
 package com.accountant.accountant;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.SimpleCursorAdapter;
@@ -46,6 +49,7 @@ public class TagManagementFragment extends ListFragment {
         builder.setTitle("Add a new tag");
 
         EditText input = new EditText(getActivity());
+        input.setHint("Name");
         builder.setView(input);
 
         builder.setPositiveButton(android.R.string.ok, (_d, _i) -> {
@@ -56,7 +60,12 @@ public class TagManagementFragment extends ListFragment {
         });
 
         builder.show();
-        input.requestFocus();
+
+        new Handler().post(() -> {
+            input.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+        });
     }
 
     private void addTag(String tagName) {
