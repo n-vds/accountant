@@ -7,14 +7,14 @@
 
     <fragment
             android:id="@+id/bottomNavFragmentDashboard"
-            android:name="com.accountant.accountant.DashboardFragment"/>
+            android:name="com.accountant.accountant.dashboardview.DashboardFragment"/>
 
     <fragment
             android:id="@+id/bottomNavFragmentInsert"
-            android:name="com.accountant.accountant.InputFragment"/>
+            android:name="com.accountant.accountant.insertview.InsertFragment"/>
 
     <fragment
             android:id="@+id/bottomNavFragmentList"
-            android:name="com.accountant.accountant.DataListFragment"/>
+            android:name="com.accountant.accountant.datalistview.DataListFragment"/>
 
 </navigation>

@@ -1,4 +1,4 @@
-package com.accountant.accountant;
+package com.accountant.accountant.managementview;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -12,6 +12,8 @@ import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.ListFragment;
+import com.accountant.accountant.MainActivity;
+import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.TagEntry;
 

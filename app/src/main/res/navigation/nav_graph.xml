@@ -19,12 +19,12 @@
 
     <fragment
             android:id="@+id/tagManagementFragment"
-            android:name="com.accountant.accountant.TagManagementFragment"
+            android:name="com.accountant.accountant.managementview.TagManagementFragment"
             android:label="Blank" />
 
     <fragment
             android:id="@+id/locationManagementFragment"
-            android:name="com.accountant.accountant.LocationManagementFragment"
+            android:name="com.accountant.accountant.managementview.LocationManagementFragment"
             android:label="Blank"/>
 
 </navigation>

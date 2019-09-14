@@ -1,4 +1,4 @@
-package com.accountant.accountant;
+package com.accountant.accountant.insertview;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,13 +10,16 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import com.accountant.accountant.LocationProvider;
+import com.accountant.accountant.MainActivity;
+import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.DistanceLocationEntity;
 import com.accountant.accountant.db.LocationEntity;
 
 import java.util.Locale;
 
-public class InputFragment extends Fragment {
+public class InsertFragment extends Fragment {
     private static final int[] R_BUTTONS = new int[]{
             R.id.button0, R.id.button1, R.id.button2,
             R.id.button3, R.id.button4, R.id.button5,
@@ -34,7 +37,7 @@ public class InputFragment extends Fragment {
     private LocationProvider locationProvider;
     private LocationProvider.LocationProviderUpdate locationListener;
 
-    public InputFragment() {
+    public InsertFragment() {
         locationListener = (status, lat, lon) -> onLocationUpdate(status, lat, lon);
     }
 

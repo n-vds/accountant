@@ -53,15 +53,15 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    Database getDatabase() {
+    public Database getDatabase() {
         return db;
     }
 
-    LocationProvider getLocationProvider() {
+    public LocationProvider getLocationProvider() {
         return locationProvider;
     }
 
-    void requestLocationPermission() {
+    public void requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             return;

@@ -1,4 +1,4 @@
-package com.accountant.accountant;
+package com.accountant.accountant.datalistview;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import android.widget.*;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.ListFragment;
+import com.accountant.accountant.MainActivity;
+import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntry;
 import com.accountant.accountant.db.TagEntry;

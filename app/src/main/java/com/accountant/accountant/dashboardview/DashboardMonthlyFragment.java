@@ -1,4 +1,4 @@
-package com.accountant.accountant;
+package com.accountant.accountant.dashboardview;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,6 +10,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.accountant.accountant.MainActivity;
+import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.StatisticsEntity;
 
