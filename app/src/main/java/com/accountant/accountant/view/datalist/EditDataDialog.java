@@ -7,15 +7,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
-import com.accountant.accountant.view.EditTagsDialog;
 import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntity;
 import com.accountant.accountant.db.TagList;
+import com.accountant.accountant.view.EditTagsDialog;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -24,7 +25,8 @@ import java.util.Date;
 public class EditDataDialog extends DialogFragment {
     private EditText vDate;
     private EditText vAmount;
-    private Button vTags;
+    private TextView vTagName;
+    private Button vChangeTag;
 
     private TagList tagList;
     private Long selectedTag;
@@ -47,14 +49,16 @@ public class EditDataDialog extends DialogFragment {
 
         vDate = view.findViewById(R.id.date);
         vAmount = view.findViewById(R.id.amount);
-        vTags = view.findViewById(R.id.listTags);
+        vTagName = view.findViewById(R.id.tagName);
+        vChangeTag = view.findViewById(R.id.changeTag);
         vDate.setText(DateFormat.getDateTimeInstance().format(new Date(originalData.timestamp)));
         vAmount.setText(String.valueOf(originalData.amount / 100));
 
-        vTags.setText(selectedTag == null ? "<No tag>" : tagList.getName(selectedTag));
-        vTags.setOnClickListener((_v) -> onTagsClick());
+        vTagName.setText(selectedTag == null ? "<No tag>" : tagList.getName(selectedTag));
+        vChangeTag.setOnClickListener((_v) -> onChangeTagClicked());
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Edit entry");
         builder.setView(view);
         builder.setPositiveButton(android.R.string.ok, (_d, _i) -> onOkClick());
         builder.setNegativeButton(android.R.string.cancel, (_d, _i) -> {
@@ -83,7 +87,7 @@ public class EditDataDialog extends DialogFragment {
         }
     }
 
-    private void onTagsClick() {
+    private void onChangeTagClicked() {
         EditTagsDialog dialog = new EditTagsDialog();
         dialog.setTargetFragment(this, 0);
 
@@ -101,6 +105,6 @@ public class EditDataDialog extends DialogFragment {
 
     public void updateTag(Long tag) {
         selectedTag = tag;
-        vTags.setText(selectedTag == null ? "<No tag>" : tagList.getName(tag));
+        vTagName.setText(selectedTag == null ? "<No tag>" : tagList.getName(tag));
     }
 }
