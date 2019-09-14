@@ -1,4 +1,4 @@
-package com.accountant.accountant.dashboardview;
+package com.accountant.accountant.view.dashboard;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

@@ -1,4 +1,4 @@
-package com.accountant.accountant.managementview;
+package com.accountant.accountant.view.locations;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -18,6 +18,7 @@ import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.LocationEntity;
 import com.accountant.accountant.db.TagList;
+import com.accountant.accountant.view.EditTagsDialog;
 
 public class EditLocationDialog extends DialogFragment {
     private LocationProvider locationProvider;

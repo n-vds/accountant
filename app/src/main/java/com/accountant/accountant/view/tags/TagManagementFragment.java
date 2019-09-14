@@ -1,4 +1,4 @@
-package com.accountant.accountant.managementview;
+package com.accountant.accountant.view.tags;
 
 import android.app.AlertDialog;
 import android.content.Context;

@@ -1,4 +1,4 @@
-package com.accountant.accountant.insertview;
+package com.accountant.accountant.view.insert;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

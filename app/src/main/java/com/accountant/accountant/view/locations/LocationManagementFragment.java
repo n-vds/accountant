@@ -1,4 +1,4 @@
-package com.accountant.accountant.managementview;
+package com.accountant.accountant.view.locations;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

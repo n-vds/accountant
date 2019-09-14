@@ -1,4 +1,4 @@
-package com.accountant.accountant.datalistview;
+package com.accountant.accountant.view.datalist;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

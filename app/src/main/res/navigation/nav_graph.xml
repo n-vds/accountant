@@ -7,7 +7,7 @@
 
     <fragment
             android:id="@+id/mainContentFragment"
-            android:name="com.accountant.accountant.MainContentFragment"
+            android:name="com.accountant.accountant.view.MainContentFragment"
             android:label="Blank">
         <action
                 android:id="@+id/mainContentToTagManagement"
@@ -19,12 +19,12 @@
 
     <fragment
             android:id="@+id/tagManagementFragment"
-            android:name="com.accountant.accountant.managementview.TagManagementFragment"
+            android:name="com.accountant.accountant.view.tags.TagManagementFragment"
             android:label="Blank" />
 
     <fragment
             android:id="@+id/locationManagementFragment"
-            android:name="com.accountant.accountant.managementview.LocationManagementFragment"
+            android:name="com.accountant.accountant.view.locations.LocationManagementFragment"
             android:label="Blank"/>
 
 </navigation>

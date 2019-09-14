@@ -1,4 +1,4 @@
-package com.accountant.accountant;
+package com.accountant.accountant.view;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
+import com.accountant.accountant.R;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainContentFragment extends Fragment {

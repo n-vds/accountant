@@ -1,4 +1,4 @@
-package com.accountant.accountant.datalistview;
+package com.accountant.accountant.view.datalist;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -10,7 +10,7 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
-import com.accountant.accountant.managementview.EditTagsDialog;
+import com.accountant.accountant.view.EditTagsDialog;
 import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
