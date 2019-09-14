@@ -1,14 +1,12 @@
 package com.accountant.accountant.view.tags;
 
-import android.app.AlertDialog;
-import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.*;
+import android.widget.CursorAdapter;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.ListFragment;
@@ -45,11 +43,11 @@ public class TagManagementFragment extends ListFragment {
 
     @Override
     public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id) {
-        showNameDialog(true, id, ((TextView) v).getText().toString());
+        showNameDialog(true, id);
     }
 
     private void onAddClick() {
-        showNameDialog(false, 0, null);
+        showNameDialog(false, 0L);
     }
 
     private void addTag(String tagName) {
@@ -73,42 +71,25 @@ public class TagManagementFragment extends ListFragment {
         adapter.notifyDataSetChanged();
     }
 
-    private void showNameDialog(boolean edit, long id, String oldName) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle(edit ? "Edit tag" : "Add a new tag");
-
-        EditText input = new EditText(getActivity());
-        input.setHint("Name");
+    private void showNameDialog(boolean edit, long id) {
+        TagDialog dialog = new TagDialog();
+        dialog.setTargetFragment(this, 0);
+        Bundle args = new Bundle();
         if (edit) {
-            input.setText(oldName);
-            input.setSelection(0, oldName.length()); // stop is exclusive
+            args.putBoolean(TagDialog.ARG_EDIT, true);
+            args.putLong(TagDialog.ARG_ID, id);
+        } else {
+            args.putBoolean(TagDialog.ARG_EDIT, false);
         }
-        builder.setView(input);
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "edittag");
+    }
 
-        builder.setPositiveButton(android.R.string.ok, (_d, _i) -> {
-            String tagName = input.getText().toString();
-
-            if (tagName.isEmpty()) {
-                Toast.makeText(getActivity(), "Name cannot be empty", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (edit) {
-                editTag(id, tagName);
-            } else {
-                addTag(tagName);
-            }
-        });
-
-        builder.setNegativeButton(android.R.string.cancel, (_d, i_) -> {
-        });
-
-        builder.show();
-
-        new Handler().post(() -> {
-            input.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
-        });
+    public void onTagDialogResult(String name, boolean edit, long id) {
+        if (!edit) {
+            addTag(name);
+        } else {
+            editTag(id, name);
+        }
     }
 }
