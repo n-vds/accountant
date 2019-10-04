@@ -1,12 +1,11 @@
 package com.accountant.accountant.view.tags;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CursorAdapter;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.ListFragment;
@@ -25,10 +24,21 @@ public class TagManagementFragment extends ListFragment {
         Database db = activity.getDatabase();
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
-                android.R.layout.simple_list_item_1,
+                R.layout.edittag_tag_row,
                 db.queryAllTagNames(),
                 new String[]{TagEntry.NAME},
-                new int[]{android.R.id.text1}, 0);
+                new int[]{R.id.root}, 0);
+
+        adapter.setViewBinder(((view, cursor, index) -> {
+            TextView vTagName = view.findViewById(R.id.tagName);
+            vTagName.setText(cursor.getString(cursor.getColumnIndex(TagEntry.NAME)));
+
+            ImageView vDelete = view.findViewById(R.id.delete);
+            vDelete.setTag(cursor.getLong(cursor.getColumnIndex(TagEntry.ID)));
+            vDelete.setOnClickListener(this::onDeleteClicked);
+
+            return true;
+        }));
 
         setListAdapter(adapter);
     }
@@ -62,6 +72,18 @@ public class TagManagementFragment extends ListFragment {
         db.editTagName(id, newTagName);
 
         reload();
+    }
+
+    private void onDeleteClicked(View view) {
+        long id = (long) view.getTag();
+        Database db = ((MainActivity) requireActivity()).getDatabase();
+        String tagName = db.queryTagList().getName(id);
+
+        new AlertDialog.Builder(requireContext())
+                .setMessage("Do you want to delete '" + tagName + "'?")
+                .setNegativeButton(android.R.string.cancel, (_d, _v) -> {})
+                .setPositiveButton("Delete", (_d, _v) -> db.deleteTag(id))
+                .show();
     }
 
     private void reload() {

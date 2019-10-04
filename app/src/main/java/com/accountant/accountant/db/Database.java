@@ -263,6 +263,23 @@ public class Database {
                 " WHERE " + TagEntry.ID + " = ?", new Object[]{newTagName, id});
     }
 
+    public void deleteTag(long id) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        try {
+            db.beginTransaction();
+            db.execSQL("UPDATE " + SpendingEntry.TABLE_NAME +
+                    " SET " + SpendingEntry.TAG + " = NULL " +
+                    " WHERE " + SpendingEntry.TAG + " = ?", new Object[]{id});
+            db.execSQL("UPDATE " + LocationEntry.TABLE_NAME +
+                    " SET " + LocationEntry.TAG + " = ? " +
+                    " WHERE " + LocationEntry.TAG + " = ?", new Object[]{id});
+            db.execSQL("DELETE FROM " + TagEntry.TABLE_NAME +
+                    " WHERE id = ?", new Object[]{id});
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     public Cursor queryAllLocations() {
         SQLiteDatabase db = helper.getReadableDatabase();
         return db.rawQuery(
