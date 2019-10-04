@@ -17,13 +17,33 @@
             app:layout_constraintStart_toStartOf="parent"/>
 
     <TextView
-            android:text="TextView"
+            android:text="26"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/amount"
             android:textSize="36sp"
             app:layout_constraintTop_toBottomOf="@id/date"
             app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+            android:text="00"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/small_amount"
+            android:textSize="20sp"
+            android:layout_marginTop="2dp"
+            app:layout_constraintStart_toEndOf="@id/amount"
+            app:layout_constraintTop_toTopOf="@id/amount"/>
+
+    <TextView
+            android:text="€"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:id="@+id/currency_symbol"
+            android:textSize="36sp"
+            app:layout_constraintStart_toEndOf="@id/small_amount"
+            app:layout_constraintBaseline_toBaselineOf="@id/amount"/>
 
     <TextView
             android:text="TextView"
