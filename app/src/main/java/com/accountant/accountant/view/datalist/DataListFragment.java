@@ -6,20 +6,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.ListFragment;
 import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntry;
 import com.accountant.accountant.db.TagEntry;
+import com.accountant.accountant.view.DeleteSelectedActionMode;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DataListFragment extends ListFragment {
-
     private static DateFormat DATE_FORMAT = SimpleDateFormat.getDateTimeInstance();
+
+    private ActionMode selectDeleteActionMode = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -33,6 +37,13 @@ public class DataListFragment extends ListFragment {
         MainActivity activity = (MainActivity) getActivity();
         Database db = activity.getDatabase();
 
+        getListView().setOnItemLongClickListener((_adapterView, _view, pos, _id) -> {
+            if (selectDeleteActionMode == null) {
+                beginActionMode();
+                getListView().setItemChecked(pos, true);
+            }
+            return true;
+        });
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 R.layout.data_list_row,
                 db.queryDataForUserView(),
@@ -66,12 +77,38 @@ public class DataListFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView list, View v, int position, long id) {
+        if (selectDeleteActionMode != null) {
+            int count = getListView().getCheckedItemCount();
+            if (count == 0) {
+                selectDeleteActionMode.finish();
+            }
+            selectDeleteActionMode.setTitle(count + " selected");
+            return;
+        }
         EditDataDialog dialog = new EditDataDialog();
         Bundle args = new Bundle();
         args.putLong("id", id);
         dialog.setArguments(args);
         dialog.setTargetFragment(this, 0);
         dialog.show(getFragmentManager(), "editdatadialog");
+    }
+
+    private void beginActionMode() {
+        DeleteSelectedActionMode callback = new DeleteSelectedActionMode(getListView(), this::deleteSelectedEntries);
+        callback.setOnDestroyListener(() -> {
+            selectDeleteActionMode = null;
+        });
+        selectDeleteActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(callback);
+    }
+
+    private void deleteSelectedEntries() {
+        long[] ids = getListView().getCheckedItemIds();
+
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        for (long id : ids) {
+            db.deleteEntry(id);
+        }
+        notifyDataChanged();
     }
 
     void notifyDataChanged() {

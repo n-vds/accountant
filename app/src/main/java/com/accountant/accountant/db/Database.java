@@ -44,6 +44,12 @@ public class Database {
         }
     }
 
+    public void deleteEntry(long id) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.execSQL("DELETE FROM " + SpendingEntry.TABLE_NAME +
+                " WHERE " + SpendingEntry.ID + " = ?", new Object[]{id});
+    }
+
     public StatisticsEntity queryStatistics() {
         SQLiteDatabase db = helper.getReadableDatabase();
 
