@@ -73,7 +73,7 @@ public class TagManagementFragment extends ListFragment {
         if (selectDeleteActionMode != null) {
             return;
         }
-        DeleteSelectedActionMode callback = new DeleteSelectedActionMode(getListView());
+        DeleteSelectedActionMode callback = new DeleteSelectedActionMode(getListView(), this::deleteSelectedTags);
         callback.setOnDestroyListener(() -> selectDeleteActionMode = null);
         selectDeleteActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(callback);
     }
@@ -92,16 +92,12 @@ public class TagManagementFragment extends ListFragment {
         reload();
     }
 
-    private void onDeleteClicked(View view) {
-        long id = (long) view.getTag();
-        Database db = ((MainActivity) requireActivity()).getDatabase();
-        String tagName = db.queryTagList().getName(id);
-
-        new AlertDialog.Builder(requireContext())
-                .setMessage("Do you want to delete '" + tagName + "'?")
-                .setNegativeButton(android.R.string.cancel, (_d, _v) -> {})
-                .setPositiveButton("Delete", (_d, _v) -> db.deleteTag(id))
-                .show();
+    private void deleteSelectedTags() {
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        for (long id : getListView().getCheckedItemIds()) {
+            db.deleteTag(id);
+        }
+        reload();
     }
 
     private void reload() {

@@ -1,5 +1,6 @@
 package com.accountant.accountant.view;
 
+import android.app.AlertDialog;
 import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,9 +12,11 @@ import com.accountant.accountant.R;
 public class DeleteSelectedActionMode implements ActionMode.Callback {
     private ListView listView;
     private Runnable onDestroy = null;
+    private Runnable onDelete = null;
 
-    public DeleteSelectedActionMode(ListView view) {
+    public DeleteSelectedActionMode(ListView view, Runnable onDelete) {
         this.listView = view;
+        this.onDelete = onDelete;
     }
 
     public void setOnDestroyListener(Runnable listener) {
@@ -38,21 +41,36 @@ public class DeleteSelectedActionMode implements ActionMode.Callback {
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         switch (item.getItemId()) {
             case R.id.delete:
-                // TODO
-                mode.finish();
+                askDelete(mode);
                 return true;
             default:
                 return false;
         }
     }
 
+    private void askDelete(ActionMode mode) {
+        int count = listView.getCheckedItemCount();
+        if (count == 0) {
+            return;
+        }
+        new AlertDialog.Builder(listView.getContext())
+                .setTitle("Delete items")
+                .setMessage("Do you want to delete " + count + " items?")
+                .setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {})
+                .setPositiveButton("Delete", (dialogInterface, i) -> {
+                    onDelete.run();
+                    mode.finish();
+                })
+                .show();
+    }
+
     @Override
     public void onDestroyActionMode(ActionMode mode) {
         listView.clearChoices();
+        listView.requestLayout();
+        ((BaseAdapter) listView.getAdapter()).notifyDataSetChanged();
         new Handler().post(() -> {
             listView.setChoiceMode(ListView.CHOICE_MODE_NONE);
-            listView.requestLayout();
-            ((BaseAdapter) listView.getAdapter()).notifyDataSetChanged();
         });
         if (this.onDestroy != null) {
             this.onDestroy.run();
