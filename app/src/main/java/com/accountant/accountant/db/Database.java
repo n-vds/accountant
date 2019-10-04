@@ -288,8 +288,12 @@ public class Database {
                         LocationEntry.DESC + ", " +
                         LocationEntry.LAT + ", " +
                         LocationEntry.LON + ", " +
-                        LocationEntry.TAG +
+                        LocationEntry.TAG + ", " +
+                        TagEntry.NAME +
                         " FROM " + LocationEntry.TABLE_NAME +
+                        " LEFT OUTER JOIN " + TagEntry.TABLE_NAME +
+                        " ON " + LocationEntry.TABLE_NAME + "." + LocationEntry.TAG +
+                        " = " + TagEntry.TABLE_NAME + "." + TagEntry.ID +
                         " ORDER BY " + LocationEntry.ID + " DESC", null);
     }
 

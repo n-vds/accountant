@@ -17,6 +17,7 @@ import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.LocationEntry;
+import com.accountant.accountant.db.TagEntry;
 import com.accountant.accountant.view.DeleteSelectedActionMode;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -40,7 +41,7 @@ public class LocationManagementFragment extends ListFragment {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 R.layout.location_row,
                 db.queryAllLocations(),
-                new String[]{LocationEntry.DESC, LocationEntry.LAT, LocationEntry.LON, LocationEntry.TAG},
+                new String[]{LocationEntry.DESC, LocationEntry.LAT, LocationEntry.LON, TagEntry.NAME},
                 new int[]{R.id.desc, R.id.lat, R.id.lon, R.id.tags}, 0);
 
         setListAdapter(adapter);
