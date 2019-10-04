@@ -313,12 +313,18 @@ public class Database {
         }
         c.moveToFirst();
 
+        Long tag = null;
+        String tagName = null;
+        if (!c.isNull(c.getColumnIndex(LocationEntry.TAG))) {
+            tag = c.getLong(c.getColumnIndex(LocationEntry.TAG));
+            tagName = c.getString(c.getColumnIndex(TagEntry.NAME));
+        }
+
         LocationEntity entity = new LocationEntity(
                 c.getString(c.getColumnIndex(LocationEntry.DESC)),
                 c.getDouble(c.getColumnIndex(LocationEntry.LAT)),
                 c.getDouble(c.getColumnIndex(LocationEntry.LON)),
-                c.getLong(c.getColumnIndex(LocationEntry.TAG)),
-                c.getString(c.getColumnIndex(TagEntry.NAME)));
+                tag, tagName);
 
         return entity;
     }
@@ -352,12 +358,17 @@ public class Database {
         }
         c.moveToFirst();
 
+        Long tag = null;
+        String tagName = null;
+        if (!c.isNull(c.getColumnIndex(LocationEntry.TAG))) {
+            tag = c.getLong(c.getColumnIndex(LocationEntry.TAG));
+            tagName = c.getString(c.getColumnIndex(TagEntry.NAME));
+        }
         LocationEntity entity = new LocationEntity(
                 c.getString(c.getColumnIndex(LocationEntry.DESC)),
                 c.getDouble(c.getColumnIndex(LocationEntry.LAT)),
                 c.getDouble(c.getColumnIndex(LocationEntry.LON)),
-                c.getLong(c.getColumnIndex(LocationEntry.TAG)),
-                c.getString(c.getColumnIndex(TagEntry.NAME)));
+                tag, tagName);
 
         double distance = coordinateDistance(lat, lon, entity.lat, entity.lon);
         return new DistanceLocationEntity(entity, distance);
@@ -386,7 +397,7 @@ public class Database {
         return distance;
     }
 
-    public void insertLocation(String desc, double lat, double lon, long tag) {
+    public void insertLocation(String desc, double lat, double lon, Long tag) {
         SQLiteDatabase db = helper.getWritableDatabase();
         String sql = "INSERT INTO " + LocationEntry.TABLE_NAME + " (" +
                 LocationEntry.DESC + ", " +
@@ -399,11 +410,15 @@ public class Database {
         stm.bindString(1, desc);
         stm.bindDouble(2, lat);
         stm.bindDouble(3, lon);
-        stm.bindLong(4, tag);
+        if (tag == null) {
+            stm.bindNull(4);
+        } else {
+            stm.bindLong(4, tag);
+        }
         stm.executeInsert();
     }
 
-    public void updateLocation(long id, String desc, double lat, double lon, long tag) {
+    public void updateLocation(long id, String desc, double lat, double lon, Long tag) {
         SQLiteDatabase db = helper.getWritableDatabase();
         String sql = "UPDATE " + LocationEntry.TABLE_NAME + " SET " +
                 LocationEntry.DESC + " = ?, " +
@@ -416,7 +431,11 @@ public class Database {
         stm.bindString(1, desc);
         stm.bindDouble(2, lat);
         stm.bindDouble(3, lon);
-        stm.bindLong(4, tag);
+        if (tag == null) {
+            stm.bindNull(4);
+        } else {
+            stm.bindLong(4, tag);
+        }
         stm.bindLong(5, id);
         stm.executeUpdateDelete();
     }

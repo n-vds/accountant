@@ -64,7 +64,11 @@ public class EditLocationDialog extends DialogFragment {
             vDesc.setText(data.desc);
             vLat.setText(String.valueOf(data.lat));
             vLon.setText(String.valueOf(data.lon));
-            vListTags.setText(String.valueOf(data.tagName));
+            if (data.tag != null) {
+                vListTags.setText(String.valueOf(data.tagName));
+            } else {
+                vListTags.setText("<No tag>");
+            }
         } else {
             title = "Create a new location";
         }
@@ -143,17 +147,11 @@ public class EditLocationDialog extends DialogFragment {
             return;
         }
 
-        if (selectedTag == null) {
-            Toast.makeText(getActivity(), "Select a tag", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        long tag = selectedTag;
-
         Bundle args = getArguments();
         if (args.getBoolean("new")) {
-            db.insertLocation(desc, lat, lon, tag);
+            db.insertLocation(desc, lat, lon, selectedTag);
         } else {
-            db.updateLocation(args.getLong("id"), desc, lat, lon, tag);
+            db.updateLocation(args.getLong("id"), desc, lat, lon, selectedTag);
         }
 
         Fragment fragment = getTargetFragment();
