@@ -1,6 +1,5 @@
 package com.accountant.accountant.view.tags;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,8 +17,10 @@ import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.TagEntry;
 import com.accountant.accountant.view.DeleteSelectedActionMode;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class TagManagementFragment extends ListFragment {
+    private FloatingActionButton fab;
     private ActionMode selectDeleteActionMode = null;
 
     @Override
@@ -48,7 +49,8 @@ public class TagManagementFragment extends ListFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_tags, container, false);
-        root.findViewById(R.id.add).setOnClickListener((_v) -> onAddClick());
+        fab = root.findViewById(R.id.add);
+        fab.setOnClickListener((_v) -> onAddClick());
         return root;
     }
 
@@ -58,8 +60,8 @@ public class TagManagementFragment extends ListFragment {
             showNameDialog(true, id);
         } else {
             int count = getListView().getCheckedItemCount();
-            selectDeleteActionMode.setTitle( count+ " selected");
-            if (count == 0)  {
+            selectDeleteActionMode.setTitle(count + " selected");
+            if (count == 0) {
                 selectDeleteActionMode.finish();
             }
         }
@@ -74,8 +76,12 @@ public class TagManagementFragment extends ListFragment {
             return;
         }
         DeleteSelectedActionMode callback = new DeleteSelectedActionMode(getListView(), this::deleteSelectedTags);
-        callback.setOnDestroyListener(() -> selectDeleteActionMode = null);
+        callback.setOnDestroyListener(() -> {
+            fab.show();
+            selectDeleteActionMode = null;
+        });
         selectDeleteActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(callback);
+        fab.hide();
     }
 
     private void addTag(String tagName) {
