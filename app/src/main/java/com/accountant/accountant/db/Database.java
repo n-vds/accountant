@@ -323,6 +323,12 @@ public class Database {
         return entity;
     }
 
+    public void deleteLocation(long id) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.execSQL("DELETE FROM " + LocationEntry.TABLE_NAME +
+                " WHERE " + LocationEntry.ID + " = ?", new Object[]{id});
+    }
+
     public DistanceLocationEntity resolveLocation(double lat, double lon) {
         SQLiteDatabase db = helper.getReadableDatabase();
         Cursor c = db.rawQuery("" +

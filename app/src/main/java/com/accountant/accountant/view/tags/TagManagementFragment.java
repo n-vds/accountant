@@ -1,20 +1,27 @@
 package com.accountant.accountant.view.tags;
 
-import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.CursorAdapter;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.ListFragment;
 import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.TagEntry;
+import com.accountant.accountant.view.DeleteSelectedActionMode;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class TagManagementFragment extends ListFragment {
+    private FloatingActionButton fab;
+    private ActionMode selectDeleteActionMode = null;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -23,22 +30,17 @@ public class TagManagementFragment extends ListFragment {
         MainActivity activity = (MainActivity) getActivity();
         Database db = activity.getDatabase();
 
+        getListView().setOnItemLongClickListener((_list, _view, position, _l) -> {
+            beginActionMode();
+            getListView().setItemChecked(position, true);
+            return true;
+        });
+
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
-                R.layout.edittag_tag_row,
+                android.R.layout.simple_list_item_activated_1,
                 db.queryAllTagNames(),
                 new String[]{TagEntry.NAME},
-                new int[]{R.id.root}, 0);
-
-        adapter.setViewBinder(((view, cursor, index) -> {
-            TextView vTagName = view.findViewById(R.id.tagName);
-            vTagName.setText(cursor.getString(cursor.getColumnIndex(TagEntry.NAME)));
-
-            ImageView vDelete = view.findViewById(R.id.delete);
-            vDelete.setTag(cursor.getLong(cursor.getColumnIndex(TagEntry.ID)));
-            vDelete.setOnClickListener(this::onDeleteClicked);
-
-            return true;
-        }));
+                new int[]{android.R.id.text1}, 0);
 
         setListAdapter(adapter);
     }
@@ -47,17 +49,39 @@ public class TagManagementFragment extends ListFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_tags, container, false);
-        root.findViewById(R.id.add).setOnClickListener((_v) -> onAddClick());
+        fab = root.findViewById(R.id.add);
+        fab.setOnClickListener((_v) -> onAddClick());
         return root;
     }
 
     @Override
     public void onListItemClick(@NonNull ListView l, @NonNull View v, int position, long id) {
-        showNameDialog(true, id);
+        if (selectDeleteActionMode == null) {
+            showNameDialog(true, id);
+        } else {
+            int count = getListView().getCheckedItemCount();
+            selectDeleteActionMode.setTitle(count + " selected");
+            if (count == 0) {
+                selectDeleteActionMode.finish();
+            }
+        }
     }
 
     private void onAddClick() {
         showNameDialog(false, 0L);
+    }
+
+    private void beginActionMode() {
+        if (selectDeleteActionMode != null) {
+            return;
+        }
+        DeleteSelectedActionMode callback = new DeleteSelectedActionMode(getListView(), this::deleteSelectedTags);
+        callback.setOnDestroyListener(() -> {
+            fab.show();
+            selectDeleteActionMode = null;
+        });
+        selectDeleteActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(callback);
+        fab.hide();
     }
 
     private void addTag(String tagName) {
@@ -74,16 +98,12 @@ public class TagManagementFragment extends ListFragment {
         reload();
     }
 
-    private void onDeleteClicked(View view) {
-        long id = (long) view.getTag();
-        Database db = ((MainActivity) requireActivity()).getDatabase();
-        String tagName = db.queryTagList().getName(id);
-
-        new AlertDialog.Builder(requireContext())
-                .setMessage("Do you want to delete '" + tagName + "'?")
-                .setNegativeButton(android.R.string.cancel, (_d, _v) -> {})
-                .setPositiveButton("Delete", (_d, _v) -> db.deleteTag(id))
-                .show();
+    private void deleteSelectedTags() {
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        for (long id : getListView().getCheckedItemIds()) {
+            db.deleteTag(id);
+        }
+        reload();
     }
 
     private void reload() {

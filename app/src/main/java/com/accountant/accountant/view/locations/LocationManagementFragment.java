@@ -10,19 +10,32 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.ListFragment;
 import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.LocationEntry;
+import com.accountant.accountant.view.DeleteSelectedActionMode;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class LocationManagementFragment extends ListFragment {
+    private FloatingActionButton fab;
+    private ActionMode selectDeleteActionMode = null;
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         MainActivity activity = (MainActivity) getActivity();
         Database db = activity.getDatabase();
+
+        getListView().setOnItemLongClickListener((_list, _view, position, _l) -> {
+            beginActionMode();
+            getListView().setItemChecked(position, true);
+            return true;
+        });
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 R.layout.location_row,
@@ -37,12 +50,22 @@ public class LocationManagementFragment extends ListFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_locations, container, false);
-        root.findViewById(R.id.add).setOnClickListener((_v) -> onAddClick());
+        fab = root.findViewById(R.id.add);
+        fab.setOnClickListener((_v) -> onAddClick());
         return root;
     }
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
+        if (selectDeleteActionMode != null) {
+            int count = getListView().getCheckedItemCount();
+            selectDeleteActionMode.setTitle(count + " selected");
+            if (count == 0) {
+                selectDeleteActionMode.finish();
+            }
+            return;
+        }
+
         EditLocationDialog dialog = new EditLocationDialog();
         Bundle args = new Bundle();
         args.putBoolean("new", false);
@@ -68,4 +91,24 @@ public class LocationManagementFragment extends ListFragment {
         ((BaseAdapter) getListAdapter()).notifyDataSetChanged();
     }
 
+    private void beginActionMode() {
+        if (selectDeleteActionMode != null) {
+            return;
+        }
+        DeleteSelectedActionMode callback = new DeleteSelectedActionMode(getListView(), this::deleteSelectedLocations);
+        callback.setOnDestroyListener(() -> {
+            fab.show();
+            selectDeleteActionMode = null;
+        });
+        selectDeleteActionMode = ((AppCompatActivity) getActivity()).startSupportActionMode(callback);
+        fab.hide();
+    }
+
+    private void deleteSelectedLocations() {
+        Database db = ((MainActivity) getActivity()).getDatabase();
+        for (long id : getListView().getCheckedItemIds()) {
+            db.deleteLocation(id);
+        }
+        notifyDataChanged();
+    }
 }
