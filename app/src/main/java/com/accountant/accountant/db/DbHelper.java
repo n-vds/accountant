@@ -38,7 +38,7 @@ public class DbHelper extends SQLiteOpenHelper {
                 LocationEntry.DESC + " TEXT NOT NULL, " +
                 LocationEntry.LAT + " REAL NOT NULL, " +
                 LocationEntry.LON + " REAL NOT NULL," +
-                LocationEntry.TAG + " INTEGER NOT NULL REFERENCES " + TagEntry.TABLE_NAME + "(" + TagEntry.ID + "))");
+                LocationEntry.TAG + " INTEGER REFERENCES " + TagEntry.TABLE_NAME + "(" + TagEntry.ID + "))");
     }
 
     @Override

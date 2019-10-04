@@ -271,10 +271,11 @@ public class Database {
                     " SET " + SpendingEntry.TAG + " = NULL " +
                     " WHERE " + SpendingEntry.TAG + " = ?", new Object[]{id});
             db.execSQL("UPDATE " + LocationEntry.TABLE_NAME +
-                    " SET " + LocationEntry.TAG + " = ? " +
+                    " SET " + LocationEntry.TAG + " = NULL " +
                     " WHERE " + LocationEntry.TAG + " = ?", new Object[]{id});
             db.execSQL("DELETE FROM " + TagEntry.TABLE_NAME +
-                    " WHERE id = ?", new Object[]{id});
+                    " WHERE " + TagEntry.ID + " = ?", new Object[]{id});
+            db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
         }
