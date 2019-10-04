@@ -17,8 +17,6 @@ import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.DistanceLocationEntity;
 import com.accountant.accountant.db.LocationEntity;
 
-import java.util.Locale;
-
 public class InsertFragment extends Fragment {
     private static final int[] R_BUTTONS = new int[]{
             R.id.button0, R.id.button1, R.id.button2,
@@ -28,7 +26,6 @@ public class InsertFragment extends Fragment {
 
     private TextView vInput;
     private TextView locationMessage;
-    private int inputAmount;
     private Button[] inputButtons;
     private Button buttonDot, buttonGo, buttonDel;
 
@@ -36,6 +33,8 @@ public class InsertFragment extends Fragment {
 
     private LocationProvider locationProvider;
     private LocationProvider.LocationProviderUpdate locationListener;
+
+    private String inputString;
 
     public InsertFragment() {
         locationListener = (status, lat, lon) -> onLocationUpdate(status, lat, lon);
@@ -58,7 +57,7 @@ public class InsertFragment extends Fragment {
             inputButtons[i].setOnClickListener(this::onClick);
         }
         buttonDot = root.findViewById(R.id.buttonDot);
-        buttonDot.setOnClickListener(this::onClick);
+        buttonDot.setOnClickListener(_v -> onDotClick());
         buttonGo = root.findViewById(R.id.buttonGo);
         buttonGo.setOnClickListener(_v -> onGoClick());
         buttonDel = root.findViewById(R.id.buttonDel);
@@ -71,7 +70,8 @@ public class InsertFragment extends Fragment {
         locationMessage = root.findViewById(R.id.locationMessage);
         locationMessage.setOnClickListener(_v -> onLocationMessageClicked());
 
-        inputAmount = 0;
+        inputString = "0";
+        handleAmountChange();
 
         return root;
     }
@@ -125,7 +125,7 @@ public class InsertFragment extends Fragment {
     private void onClick(View which) {
         for (int num = 0; num < R_BUTTONS.length; num++) {
             if (which.getId() == R_BUTTONS[num]) {
-                onClickNumber(num);
+                onNumClick(num);
                 break;
             }
         }
@@ -134,6 +134,20 @@ public class InsertFragment extends Fragment {
     private void onGoClick() {
         MainActivity activity = (MainActivity) getActivity();
 
+        int dotpos = inputString.indexOf(".");
+        int inputAmount;
+        if (dotpos == -1) {
+            inputAmount = Integer.parseInt(inputString) * 100;
+        } else {
+            inputAmount = Integer.parseInt(inputString.substring(0, dotpos)) * 100;
+            if (dotpos < inputString.length() - 1) {
+                int value = Integer.parseInt(inputString.substring(dotpos + 1));
+                if (dotpos == inputString.length() - 2) {
+                    value *= 10; // so xx.8 => 80
+                }
+                inputAmount += value;
+            }
+        }
         if (inputAmount == 0) {
             Toast.makeText(getActivity(), "You didn't specify an amount!", Toast.LENGTH_SHORT).show();
             return;
@@ -141,12 +155,12 @@ public class InsertFragment extends Fragment {
 
         Database db = activity.getDatabase();
         if (knownLocation == null) {
-            db.insert(inputAmount * 100, null);
+            db.insert(inputAmount, null);
         } else {
-            db.insert(inputAmount * 100, knownLocation.tag);
+            db.insert(inputAmount, knownLocation.tag);
         }
 
-        inputAmount = 0;
+        inputString = "0";
         handleAmountChange();
 
         Navigation.findNavController(requireActivity(), R.id.content)
@@ -154,27 +168,45 @@ public class InsertFragment extends Fragment {
     }
 
     private void onDelClick() {
-        inputAmount = inputAmount / 10;
+        if (inputString.length() == 1) {
+            inputString = "0";
+        } else {
+            inputString = inputString.substring(0, inputString.length() - 1);
+        }
         handleAmountChange();
     }
 
     private void onDelLongClick() {
-        inputAmount = 0;
+        inputString = "0";
         handleAmountChange();
     }
 
-    private void onClickNumber(int num) {
-        inputAmount = inputAmount * 10 + num;
+    private void onNumClick(int num) {
+        if (inputString.equals("0")) {
+            inputString = String.valueOf(num);
+        } else {
+            int dotpos = inputString.indexOf(".");
+            if (dotpos != -1 && dotpos < inputString.length() - 2) {
+                return;
+            }
+            inputString = inputString + num;
+        }
+        handleAmountChange();
+    }
+
+    private void onDotClick() {
+        if (inputString.indexOf('.') > -1) {
+            return;
+        }
+        inputString = inputString + ".";
         handleAmountChange();
     }
 
     private void handleAmountChange() {
-        if (inputAmount < 0) {
-            inputAmount = 0;
-        } else if (inputAmount > 999_999) {
-            inputAmount = 999_999;
+        if ((inputString + ".").indexOf('.') > 4) {
+            inputString = "99999";
         }
-        String formatted = String.format(Locale.getDefault(), "%,d €", inputAmount);
+        String formatted = inputString + " €";
         vInput.setText(formatted);
     }
 

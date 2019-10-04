@@ -47,28 +47,37 @@ public class DataListFragment extends ListFragment {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                 R.layout.data_list_row,
                 db.queryDataForUserView(),
-                new String[]{SpendingEntry.DATE, SpendingEntry.AMOUNT, TagEntry.NAME},
-                new int[]{R.id.date, R.id.amount, R.id.listTags}, 0);
+                new String[]{SpendingEntry.DATE, SpendingEntry.AMOUNT, SpendingEntry.AMOUNT, TagEntry.NAME},
+                new int[]{R.id.date, R.id.amount, R.id.small_amount, R.id.listTags}, 0);
 
         adapter.setViewBinder((view, cursor, columnIndex) -> {
             TextView v = (TextView) view;
 
-            if (columnIndex == cursor.getColumnIndex(SpendingEntry.DATE)) {
-                long date = cursor.getLong(columnIndex);
-                v.setText(DATE_FORMAT.format(new Date(date)));
-            } else if (columnIndex == cursor.getColumnIndex(SpendingEntry.AMOUNT)) {
-                v.setText((cursor.getInt(columnIndex) / 100) + " €");
-            } else if (columnIndex == cursor.getColumnIndex(TagEntry.NAME)) {
-                String tagName = cursor.getString(columnIndex);
-                if (tagName == null || tagName.isEmpty()) {
-                    v.setText("");
-                } else {
-                    v.setText(tagName);
-                }
-            } else {
-                return false;
-            }
+            switch (view.getId()) {
+                case R.id.date:
+                    long date = cursor.getLong(columnIndex);
+                    v.setText(DATE_FORMAT.format(new Date(date)));
+                    break;
 
+                case R.id.amount:
+                    v.setText(String.valueOf(cursor.getInt(columnIndex) / 100));
+                    break;
+
+                case R.id.small_amount:
+                    v.setText(String.format("%02d", cursor.getInt(columnIndex) % 100));
+                    break;
+
+                case R.id.listTags:
+                    if (cursor.isNull(columnIndex) || cursor.getString(columnIndex).isEmpty()) {
+                        v.setText("");
+                    } else {
+                        v.setText(cursor.getString(columnIndex));
+                    }
+                    break;
+
+                default:
+                    return false;
+            }
             return true;
         });
 
