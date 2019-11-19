@@ -20,6 +20,7 @@ public class DbHelper extends SQLiteOpenHelper {
                 SpendingEntry.AMOUNT + " INTEGER NOT NULL, " +
                 SpendingEntry.DATE + " INTEGER NOT NULL, " +
                 SpendingEntry.MONTH + " INTEGER NOT NULL," +
+                SpendingEntry.YEAR + " INTEGER NOT NULL," +
                 SpendingEntry.TAG + " INTEGER REFERENCES " + TagEntry.TABLE_NAME + "(" + TagEntry.ID + "))");
 
         db.execSQL("CREATE TABLE " + TagEntry.TABLE_NAME + "(" +

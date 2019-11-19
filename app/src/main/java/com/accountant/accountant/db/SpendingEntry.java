@@ -9,5 +9,6 @@ public final class SpendingEntry {
     public static final String AMOUNT = "amount";
     public static final String DATE = "date";
     public static final String MONTH = "month";
+    public static final String YEAR = "year";
     public static final String TAG = "tag";
 }

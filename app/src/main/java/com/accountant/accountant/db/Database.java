@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.telecom.Call;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +29,7 @@ public class Database {
 
         long now = Calendar.getInstance().getTimeInMillis();
         int month = Calendar.getInstance().get(Calendar.MONTH);
+        int year = Calendar.getInstance().get(Calendar.YEAR);
 
         db.beginTransaction();
         try {
@@ -35,6 +37,7 @@ public class Database {
             values.put(SpendingEntry.AMOUNT, spending);
             values.put(SpendingEntry.DATE, now);
             values.put(SpendingEntry.MONTH, month);
+            values.put(SpendingEntry.YEAR, year);
             values.put(SpendingEntry.TAG, tag);
             db.insert(SpendingEntry.TABLE_NAME, null, values);
 
@@ -56,6 +59,7 @@ public class Database {
         Calendar calendar = Calendar.getInstance();
         long now = calendar.getTimeInMillis();
         int month = calendar.get(Calendar.MONTH);
+        int year = calendar.get(Calendar.YEAR);
         calendar.add(Calendar.DAY_OF_MONTH, -30);
         long thirtyDaysAgo = calendar.getTimeInMillis();
 
@@ -76,17 +80,22 @@ public class Database {
             String sqlThisMonth = "SELECT " +
                     "SUM(" + SpendingEntry.AMOUNT + ") " +
                     "FROM " + SpendingEntry.TABLE_NAME + " " +
-                    "WHERE " + SpendingEntry.MONTH + " = ?";
-            c = db.rawQuery(sqlThisMonth, new String[]{String.valueOf(month)});
+                    "WHERE " + SpendingEntry.MONTH + " = ? AND " +
+                    SpendingEntry.YEAR + " = ?";
+            c = db.rawQuery(sqlThisMonth, new String[]{String.valueOf(month), String.valueOf(year)});
             c.moveToFirst();
             int spentThisMonth = c.getInt(0);
             c.close();
 
-            String avgMonth = "SELECT " +
-                    "AVG(" + SpendingEntry.AMOUNT + ") AS avg, " +
-                    SpendingEntry.MONTH + " " +
+            String avgMonth = "SELECT AVG(sum) AS avg, " +
+                    SpendingEntry.MONTH + " FROM (" +
+                    "SELECT " +
+                    "SUM(" + SpendingEntry.AMOUNT + ") AS sum, " +
+                    SpendingEntry.MONTH + ", " +
+                    SpendingEntry.YEAR + " " +
                     "FROM " + SpendingEntry.TABLE_NAME + " " +
-                    "GROUP BY " + SpendingEntry.MONTH;
+                    "GROUP BY " + SpendingEntry.MONTH + ", " + SpendingEntry.YEAR +
+                    ") GROUP BY " + SpendingEntry.MONTH;
             c = db.rawQuery(avgMonth, null);
 
             float[] avgValues = new float[12];
@@ -455,6 +464,7 @@ public class Database {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(date);
         int month = calendar.get(Calendar.MONTH);
+        int year = calendar.get(Calendar.YEAR);
 
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
@@ -463,9 +473,10 @@ public class Database {
                     SpendingEntry.DATE + " = ?, " +
                     SpendingEntry.AMOUNT + " = ?, " +
                     SpendingEntry.MONTH + " = ?, " +
+                    SpendingEntry.YEAR + " = ?, " +
                     SpendingEntry.TAG + " = ? " +
                     " WHERE " + SpendingEntry.ID + " = ?";
-            db.execSQL(sqlSpending, new Object[]{date, amount, month, tagId, id});
+            db.execSQL(sqlSpending, new Object[]{date, amount, month, year, tagId, id});
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
