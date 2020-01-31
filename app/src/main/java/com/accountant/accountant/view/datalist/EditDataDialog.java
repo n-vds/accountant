@@ -53,7 +53,7 @@ public class EditDataDialog extends DialogFragment {
         vTagName = view.findViewById(R.id.tagName);
         vChangeTag = view.findViewById(R.id.changeTag);
         vDate.setText(DateFormat.getDateTimeInstance().format(new Date(originalData.timestamp)));
-        vAmount.setText(String.valueOf(originalData.amount / 100));
+        vAmount.setText(String.format("%d.%01d", originalData.amount / 100, originalData.amount % 100));
 
         vTagName.setText(selectedTag == null ? "<No tag>" : tagList.getName(selectedTag));
         vChangeTag.setOnClickListener((_v) -> onChangeTagClicked());
