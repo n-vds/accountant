@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
@@ -70,13 +71,33 @@ public class EditDataDialog extends DialogFragment {
         Database db = ((MainActivity) getActivity()).getDatabase();
 
         long id = getArguments().getLong("id");
-        long date = originalData.timestamp;
+        long date;
         try {
             date = DateFormat.getDateTimeInstance().parse(vDate.getText().toString()).getTime();
-        } catch (ParseException e) {
-            e.printStackTrace();
+        } catch (ParseException _ex) {
+            Toast.makeText(requireContext(), "Invalid date entered", Toast.LENGTH_SHORT).show();
+            return;
         }
-        int amount = Integer.parseInt(vAmount.getText().toString()) * 100;
+
+        String amountStr = vAmount.getText().toString();
+        int amount;
+        try {
+            if (amountStr.indexOf('.') != -1) {
+                String beforePoint = amountStr.substring(0, amountStr.indexOf('.'));
+                String afterPoint = amountStr.substring(amountStr.indexOf('.') + 1);
+                if (afterPoint.length() != 2) {
+                    Toast.makeText(requireContext(), "Invalid amount entered", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                amount = Integer.parseInt(beforePoint) * 100 +
+                        Integer.parseInt(afterPoint);
+            } else {
+                amount = Integer.parseInt(amountStr) * 100;
+            }
+        } catch (NumberFormatException _ex) {
+            Toast.makeText(requireContext(), "Invalid amount entered", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         db.updateEntry(id, date, amount, selectedTag);
 
