@@ -1,6 +1,7 @@
 package com.accountant.accountant.view.insert;
 
 import android.os.Bundle;
+import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import com.accountant.accountant.R;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.DistanceLocationEntity;
 import com.accountant.accountant.db.LocationEntity;
+import com.accountant.accountant.view.EditTagsDialog;
 
 public class InsertFragment extends Fragment {
     private static final int[] R_BUTTONS = new int[]{
@@ -60,6 +62,10 @@ public class InsertFragment extends Fragment {
         buttonDot.setOnClickListener(_v -> onDotClick());
         buttonGo = root.findViewById(R.id.buttonGo);
         buttonGo.setOnClickListener(_v -> onGoClick());
+        buttonGo.setOnLongClickListener(_v -> {
+            onGoLongClick();
+            return true;
+        });
         buttonDel = root.findViewById(R.id.buttonDel);
         buttonDel.setOnClickListener(_v -> onDelClick());
         buttonDel.setOnLongClickListener(_v -> {
@@ -132,6 +138,11 @@ public class InsertFragment extends Fragment {
     }
 
     private void onGoClick() {
+        // Insert without overriding tag => using location
+        execInsert(false, null);
+    }
+
+    private void execInsert(boolean overrideTag, Long tag) {
         MainActivity activity = (MainActivity) getActivity();
 
         int dotpos = inputString.indexOf(".");
@@ -154,7 +165,9 @@ public class InsertFragment extends Fragment {
         }
 
         Database db = activity.getDatabase();
-        if (knownLocation == null) {
+        if (overrideTag) {
+            db.insert(inputAmount, tag);
+        } else if (knownLocation == null) {
             db.insert(inputAmount, null);
         } else {
             db.insert(inputAmount, knownLocation.tag);
@@ -165,6 +178,21 @@ public class InsertFragment extends Fragment {
 
         Navigation.findNavController(requireActivity(), R.id.content)
                 .navigate(R.id.bottomNavFragmentList);
+    }
+
+    private void onGoLongClick() {
+        Bundle args = new Bundle();
+        args.putBoolean(EditTagsDialog.ARG_MUST_SELECT, false);
+        args.putBoolean(EditTagsDialog.ARG_HAS_CHECKED_TAG, false);
+
+        EditTagsDialog dialog = new EditTagsDialog();
+        dialog.setArguments(args);
+        dialog.setTargetFragment(this, 0);
+        dialog.show(getFragmentManager(), null);
+    }
+
+    public void updateTag(Long tag) {
+        execInsert(true, tag);
     }
 
     private void onDelClick() {
