@@ -1,7 +1,6 @@
 package com.accountant.accountant.view.insert;
 
 import android.os.Bundle;
-import android.text.Editable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -139,11 +138,16 @@ public class InsertFragment extends Fragment {
     }
 
     private void onGoClick() {
-        // Insert without overriding tag => using location
-        execInsert(false, null);
+        if (knownLocation == null) {
+            // Location is unknown => ask for tag
+            execInsertAfterAskingTag();
+        } else {
+            // Location is known => insert with appropriate tag
+            execInsert(knownLocation.tag);
+        }
     }
 
-    private void execInsert(boolean overrideTag, Long tag) {
+    private void execInsert(Long tag) {
         MainActivity activity = (MainActivity) getActivity();
 
         int inputAmount;
@@ -161,13 +165,7 @@ public class InsertFragment extends Fragment {
         }
 
         Database db = activity.getDatabase();
-        if (overrideTag) {
-            db.insert(inputAmount, tag);
-        } else if (knownLocation == null) {
-            db.insert(inputAmount, null);
-        } else {
-            db.insert(inputAmount, knownLocation.tag);
-        }
+        db.insert(inputAmount, tag);
 
         inputString = "0";
         handleAmountChange();
@@ -176,7 +174,7 @@ public class InsertFragment extends Fragment {
                 .navigate(R.id.bottomNavFragmentList);
     }
 
-    private void onGoLongClick() {
+    private void execInsertAfterAskingTag() {
         Bundle args = new Bundle();
         args.putBoolean(EditTagsDialog.ARG_MUST_SELECT, false);
         args.putBoolean(EditTagsDialog.ARG_HAS_CHECKED_TAG, false);
@@ -187,8 +185,12 @@ public class InsertFragment extends Fragment {
         dialog.show(getFragmentManager(), null);
     }
 
+    private void onGoLongClick() {
+        execInsertAfterAskingTag();
+    }
+
     public void updateTag(Long tag) {
-        execInsert(true, tag);
+        execInsert(tag);
     }
 
     private void onDelClick() {
