@@ -9,6 +9,7 @@ import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.view.datalist.EditDataDialog;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.TagList;
+import com.accountant.accountant.view.insert.InsertFragment;
 import com.accountant.accountant.view.locations.EditLocationDialog;
 
 import java.util.ArrayList;
@@ -128,6 +129,8 @@ public class EditTagsDialog extends DialogFragment {
             ((EditDataDialog) target).updateTag(selectedTag);
         } else if (target instanceof EditLocationDialog) {
             ((EditLocationDialog) target).updateTag(selectedTag);
+        } else if (target instanceof InsertFragment) {
+            ((InsertFragment) target).updateTag(selectedTag);
         }
     }
 }
