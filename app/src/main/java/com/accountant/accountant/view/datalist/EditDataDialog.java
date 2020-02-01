@@ -2,17 +2,20 @@ package com.accountant.accountant.view.datalist;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.R;
+import com.accountant.accountant.Utils;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.SpendingEntity;
 import com.accountant.accountant.db.TagList;
@@ -52,7 +55,7 @@ public class EditDataDialog extends DialogFragment {
         vTagName = view.findViewById(R.id.tagName);
         vChangeTag = view.findViewById(R.id.changeTag);
         vDate.setText(DateFormat.getDateTimeInstance().format(new Date(originalData.timestamp)));
-        vAmount.setText(String.valueOf(originalData.amount / 100));
+        vAmount.setText(String.format("%d.%02d", originalData.amount / 100, originalData.amount % 100));
 
         vTagName.setText(selectedTag == null ? "<No tag>" : tagList.getName(selectedTag));
         vChangeTag.setOnClickListener((_v) -> onChangeTagClicked());
@@ -60,23 +63,42 @@ public class EditDataDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Edit entry");
         builder.setView(view);
-        builder.setPositiveButton(android.R.string.ok, (_d, _i) -> onOkClick());
-        builder.setNegativeButton(android.R.string.cancel, (_d, _i) -> {
-        });
+        builder.setPositiveButton(android.R.string.ok, (_d, _i) -> { }); // see onResume
+        builder.setNegativeButton(android.R.string.cancel, (_d, _i) -> { });
+
         return builder.create();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // explicit set so, such that Dialog has to be dismissed explicitly
+        // therefore allowing to validate user input
+        ((AlertDialog) getDialog()).getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(_v -> onOkClick());
     }
 
     private void onOkClick() {
         Database db = ((MainActivity) getActivity()).getDatabase();
 
         long id = getArguments().getLong("id");
-        long date = originalData.timestamp;
+        long date;
         try {
             date = DateFormat.getDateTimeInstance().parse(vDate.getText().toString()).getTime();
-        } catch (ParseException e) {
-            e.printStackTrace();
+        } catch (ParseException _ex) {
+            Toast.makeText(requireContext(), "Invalid date entered", Toast.LENGTH_SHORT).show();
+            return;
         }
-        int amount = Integer.parseInt(vAmount.getText().toString()) * 100;
+
+
+        int amount;
+        try {
+            String amountStr = vAmount.getText().toString();
+            amount = Utils.parseInputAsMonetaryAmount(amountStr);
+        } catch (NumberFormatException _ex) {
+            Toast.makeText(requireContext(), "Invalid amount entered", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         db.updateEntry(id, date, amount, selectedTag);
 
@@ -85,6 +107,8 @@ public class EditDataDialog extends DialogFragment {
         if (fragment instanceof DataListFragment) {
             ((DataListFragment) fragment).notifyDataChanged();
         }
+
+        getDialog().dismiss();
     }
 
     private void onChangeTagClicked() {
