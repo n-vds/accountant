@@ -102,6 +102,14 @@ public class DataListFragment extends ListFragment {
         dialog.show(getFragmentManager(), "editdatadialog");
     }
 
+    @Override
+    public void onDestroyView() {
+        if (selectDeleteActionMode != null) {
+            selectDeleteActionMode.finish();
+        }
+        super.onDestroyView();
+    }
+
     private void beginActionMode() {
         DeleteSelectedActionMode callback = new DeleteSelectedActionMode(getListView(), this::deleteSelectedEntries);
         callback.setOnDestroyListener(() -> {
