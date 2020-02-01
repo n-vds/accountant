@@ -13,6 +13,7 @@ import androidx.navigation.Navigation;
 import com.accountant.accountant.LocationProvider;
 import com.accountant.accountant.MainActivity;
 import com.accountant.accountant.R;
+import com.accountant.accountant.Utils;
 import com.accountant.accountant.db.Database;
 import com.accountant.accountant.db.DistanceLocationEntity;
 import com.accountant.accountant.db.LocationEntity;
@@ -134,20 +135,15 @@ public class InsertFragment extends Fragment {
     private void onGoClick() {
         MainActivity activity = (MainActivity) getActivity();
 
-        int dotpos = inputString.indexOf(".");
         int inputAmount;
-        if (dotpos == -1) {
-            inputAmount = Integer.parseInt(inputString) * 100;
-        } else {
-            inputAmount = Integer.parseInt(inputString.substring(0, dotpos)) * 100;
-            if (dotpos < inputString.length() - 1) {
-                int value = Integer.parseInt(inputString.substring(dotpos + 1));
-                if (dotpos == inputString.length() - 2) {
-                    value *= 10; // so xx.8 => 80
-                }
-                inputAmount += value;
-            }
+        try {
+            inputAmount = Utils.parseInputAsMonetaryAmount(inputString);
+        } catch (NumberFormatException ex) {
+            // that shouldn't ever happen
+            ex.printStackTrace();
+            inputAmount = 0;
         }
+
         if (inputAmount == 0) {
             Toast.makeText(getActivity(), "You didn't specify an amount!", Toast.LENGTH_SHORT).show();
             return;
